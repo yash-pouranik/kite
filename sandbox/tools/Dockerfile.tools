@@ -1,0 +1,23 @@
+FROM alpine:3.19
+
+RUN apk update && \
+    apk add --no-cache \
+        bash \
+        curl \
+        nmap \
+        nmap-scripts \
+        bind-tools \
+        jq \
+        python3 \
+        py3-pip
+
+# Install Nuclei (ProjectDiscovery official release)
+RUN curl -sL https://github.com/projectdiscovery/nuclei/releases/download/v3.2.9/nuclei_3.2.9_linux_amd64.zip -o nuclei.zip && \
+    unzip nuclei.zip && \
+    mv nuclei /usr/local/bin/ && \
+    rm -f nuclei.zip
+
+# Create scan workspace
+WORKDIR /scans
+
+CMD ["sleep", "infinity"]

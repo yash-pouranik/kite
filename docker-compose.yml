@@ -1,0 +1,129 @@
+services:
+  # ── Switch Room Orchestration Engine ──
+  switch-server:
+    image: switchagents/switch:latest
+    container_name: switch-server
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./switch:/app/config
+    environment:
+      - PORT=3000
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - secops-net
+
+  # ── Switch Discord Bridge ──
+  discord-bridge:
+    image: switchagents/bridge-discord:latest
+    container_name: switch-discord-bridge
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - SWITCH_SERVER_URL=http://switch-server:3000
+    depends_on:
+      - switch-server
+    networks:
+      - secops-net
+
+  # ── FastAPI Event Gateway & Agentic Runtime ──
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: cyberwar-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_REPO_OWNER=${GITHUB_REPO_OWNER}
+      - GITHUB_REPO_NAME=${GITHUB_REPO_NAME}
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://secops:secops_secure_pass@postgres:5432/cyberwar
+      - SWITCH_SERVER_URL=http://switch-server:3000
+      - NGINX_PATCH_DIR=/app/nginx_patches
+    volumes:
+      - ./sandbox/nginx/conf.d:/app/nginx_patches
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - switch-server
+      - redis
+      - postgres
+      - nginx-proxy
+      - sec-tools
+    networks:
+      - secops-net
+      - sandbox-net
+
+  # ── PostgreSQL Persistent State ──
+  postgres:
+    image: postgres:16-alpine
+    container_name: cyberwar-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=secops
+      - POSTGRES_PASSWORD=secops_secure_pass
+      - POSTGRES_DB=cyberwar
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./gateway/db/migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
+    networks:
+      - secops-net
+
+  # ── Redis Ephemeral State & Lock Manager ──
+  redis:
+    image: redis:7-alpine
+    container_name: cyberwar-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - secops-net
+
+  # ── Nginx Smart WAF Reverse Proxy (Virtual Patch Injection Node) ──
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: cyberwar-nginx-proxy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./sandbox/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./sandbox/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - juice-shop
+    networks:
+      - sandbox-net
+
+  # ── Target Vulnerable Application (OWASP Juice Shop v20) ──
+  juice-shop:
+    image: bkimminich/juice-shop:v20.0.0
+    container_name: cyberwar-juice-shop
+    networks:
+      - sandbox-net
+
+  # ── Sandboxed Security Tool Runner (Nmap + Nuclei) ──
+  sec-tools:
+    build:
+      context: ./sandbox/tools
+      dockerfile: Dockerfile.tools
+    container_name: cyberwar-sec-tools
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    networks:
+      - sandbox-net
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  secops-net:
+    driver: bridge
+  sandbox-net:
+    driver: bridge

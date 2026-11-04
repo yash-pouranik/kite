@@ -1,0 +1,24 @@
+{
+  "authentication_type": "Bearer JWT (JSON Body Post)",
+  "endpoints": {
+    "login": {
+      "path": "/rest/user/login",
+      "method": "POST",
+      "payload_fields": ["email", "password"],
+      "token_location": "response.body.authentication.token",
+      "known_vulnerabilities": ["SQL Injection / Authentication Bypass"]
+    },
+    "registration": {
+      "path": "/api/Users",
+      "method": "POST",
+      "payload_fields": ["email", "password", "securityQuestionId", "securityAnswer"]
+    }
+  },
+  "metadata": {
+    "last_scanned_at": "2026-11-05T01:35:00Z",
+    "last_updated_by": "recon-bot",
+    "discovery_method": "javascript_bundle_crawler",
+    "knowledge_completeness_percentage": 90,
+    "confidence_score": 0.90
+  }
+}

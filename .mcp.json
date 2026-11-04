@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "switch-ai-docs": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "env": {
+        "ENDPOINT": "https://docs.switchagents.ai/mcp"
+      }
+    }
+  }
+}
