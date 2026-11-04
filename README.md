@@ -7,7 +7,7 @@
 [![Built for Flip the Switch Hackathon](https://img.shields.io/badge/Flip_the_Switch-Hackathon_2026-6C5CE7?style=for-the-badge&logo=rocket)](https://www.wemakedevs.org/hackathons/switch)
 [![Switch Protocol](https://img.shields.io/badge/Orchestrated_by-Switch_Rooms-00CEC9?style=for-the-badge)](https://switchagents.ai)
 [![Models](https://img.shields.io/badge/Models-GPT--6--Luna_%7C_Gemini--3.1--Flash--Lite-FD79A8?style=for-the-badge)](https://openai.com)
-[![License](https://img.shields.io/badge/License-Apache_2.0-0984E3?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-0984E3?style=for-the-badge)](LICENSE)
 
 <br/>
 
@@ -190,4 +190,4 @@ Watch the 4 agents perform the entire reconnaissance, exploit verification, virt
 ## 📜 License & Credits
 
 Built with ❤️ by Solo Builder for the **Flip the Switch Hackathon (2026)** organized by **WeMakeDevs × DevTools Academy × Switch**.  
-Licensed under the Apache 2.0 License.
+Licensed under the MIT License.
