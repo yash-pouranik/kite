@@ -32,7 +32,7 @@ services:
     build:
       context: ./gateway
       dockerfile: Dockerfile
-    container_name: cyberwar-gateway
+    container_name: kite-gateway
     ports:
       - "8000:8000"
     environment:

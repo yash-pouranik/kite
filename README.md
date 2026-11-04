@@ -1,7 +1,7 @@
 <div align="center">
 
-# 🛡️ CyberWar-Room
-### Autonomous Multi-Agent SecOps Workforce Platform
+# 🪁 Kite
+### Autonomous Multi-Agent SecOps Teammate Platform
 **Turn your solo security tools into an autonomous War Room team.**
 
 [![Built for Flip the Switch Hackathon](https://img.shields.io/badge/Flip_the_Switch-Hackathon_2026-6C5CE7?style=for-the-badge&logo=rocket)](https://www.wemakedevs.org/hackathons/switch)
@@ -12,7 +12,7 @@
 <br/>
 
 > **Track:** Track 01: Best Business Workflow ($2,000 Cash Prize)  
-> **Key Innovation:** Autonomous multi-model SecOps workforce collaborating with humans in natural language to discover vulnerabilities, safely verify exploits, deploy zero-downtime virtual patches, and open permanent GitOps Pull Requests.
+> **Key Innovation:** Kite connects autonomous multi-model agents with human engineers in Discord using Switch Protocol to discover vulnerabilities, safely verify exploits, deploy zero-downtime virtual shields, and open permanent GitOps Pull Requests.
 
 </div>
 
@@ -27,9 +27,9 @@ Security operations today are broken:
 
 ---
 
-## 🚀 The Solution: CyberWar-Room
+## 🚀 The Solution: Kite
 
-CyberWar-Room is an **Enterprise Cloud-Security Autonomous Workforce Platform**. It connects 4 specialized AI agents into a corporate **Discord War Room** using the open-source **Switch Protocol**:
+Kite is an **Enterprise Cloud-Security Autonomous Workforce Platform**. It connects 4 specialized AI agents into a corporate **Discord War Room** using the open-source **Switch Protocol**:
 
 ```
                                ┌────────────────────────────────────────────────────────┐
@@ -56,7 +56,7 @@ CyberWar-Room is an **Enterprise Cloud-Security Autonomous Workforce Platform**.
                 ▼                          ▼                            ▼                           ▼
  ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
  │                                      ISOLATED TARGET RUNTIME NETWORK                                             │
- │          [Nginx Reverse Proxy / WAF] ─────────▶ [OWASP Juice Shop v20.x Application Container]                  │
+ │          [Nginx Reverse Proxy / WAF] ─────────▶ [OWASP Juice Shop / Staging App Container]                       │
  └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -136,7 +136,7 @@ Verdict: RESOLVED. Incident INC-SQLI-SEARCH closed!"
 
 ## ⚖️ Hackathon Judging Rubric Alignment
 
-| Criteria | Weight | How CyberWar-Room Wins |
+| Criteria | Weight | How Kite Wins |
 |:---|:---:|:---|
 | **Use of Switch** | **30%** | **Fundamental to Architecture**: Switch's multi-agent room infrastructure is the entire backbone. Agents share state, track human confirmations, and collaborate in Discord. Without Switch, this system does not exist. |
 | **Technical Execution** | **25%** | **Deep Engineering**: Sandboxed Docker networking (`sandbox-net`), Nmap + Nuclei CLI runners, hot-reloadable Nginx reverse proxy, GitOps GitHub API PR automation, dual-path verification. |
@@ -153,8 +153,8 @@ Verdict: RESOLVED. Incident INC-SQLI-SEARCH closed!"
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/switch-hack.git
-cd switch-hack
+git clone https://github.com/your-username/kite.git
+cd kite
 ```
 
 ### 2. Configure Environment Variables
@@ -172,12 +172,12 @@ Fill in your required credentials in `.env`:
 docker compose up -d
 ```
 This spins up:
-- `cyberwar-gateway` (FastAPI Event Gateway on `:8000`)
+- `kite-gateway` (FastAPI Event Gateway on `:8000`)
 - `switch-server` (Switch Room Engine on `:3000`)
-- `cyberwar-nginx-proxy` (Smart Reverse Proxy on `:8080`)
-- `cyberwar-juice-shop` (OWASP Juice Shop target)
-- `cyberwar-sec-tools` (Sandboxed Nmap + Nuclei runner)
-- `cyberwar-postgres` & `cyberwar-redis` (State layers)
+- `kite-nginx-proxy` (Smart Reverse Proxy on `:8080`)
+- `kite-juice-shop` (OWASP Juice Shop target)
+- `kite-sec-tools` (Sandboxed Nmap + Nuclei runner)
+- `kite-postgres` & `kite-redis` (State layers)
 
 ### 4. Run the End-to-End Conversational Simulation
 ```bash

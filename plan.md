@@ -1,6 +1,6 @@
-# 🛡️ CYBERWAR-ROOM — Master Architecture & Build Plan
+# 🪁 KITE — Master Architecture & Build Plan
 
-> **Agentic CyberWar-Room: Enterprise Cloud-Security Autonomous Workforce Platform**  
+> **Kite: Autonomous Multi-Agent SecOps Teammate Platform**  
 > **Deployment Topology:** On-Host Autonomous SecOps Sidecar on Staging EC2 Instance (`vynn.urbackend.in`) & Local Dev Support.
 
 ---
@@ -23,7 +23,7 @@ The platform is deployed directly alongside the application stack on the **Stagi
  │        Localhost Network / Sockets              Volume Mount / Read-Write        │
  │                    │                                        │                    │
  │  ┌─────────────────┴────────────────────────────────────────┴─────────────────┐  │
- │  │               CYBERWAR-ROOM SIDECAR STACK (Docker on EC2)                  │  │
+ │  │                  KITE SIDECAR STACK (Docker on EC2)                        │  │
  │  │                                                                            │  │
  │  │  • switch-server & discord-bridge (Outbound WebSocket to Discord Gateway)  │  │
  │  │  • gateway (FastAPI + LangGraph + Pre-Action Action Plan Engine)          │  │
