@@ -89,22 +89,31 @@ class KnowledgeBaseManager:
     def calculate_completeness(self, category: str, data: Dict[str, Any]) -> int:
         """
         Calculates factual completeness percentage based on category heuristics.
+        Handles both list-of-strings and list-of-dicts gracefully.
         """
         score = 0
         cat_lower = category.lower()
 
         if "auth" in cat_lower:
             endpoints = data.get("endpoints", {})
-            if "login" in endpoints:
-                login_info = endpoints["login"]
-                if login_info.get("path"):
-                    score += 30
-                if login_info.get("payload_fields"):
-                    score += 30
-                if login_info.get("token_location") or login_info.get("auth_type"):
+            if isinstance(endpoints, dict):
+                if "login" in endpoints:
+                    login_info = endpoints["login"]
+                    if isinstance(login_info, dict):
+                        if login_info.get("path"):
+                            score += 30
+                        if login_info.get("payload_fields"):
+                            score += 30
+                        if login_info.get("token_location") or login_info.get("auth_type"):
+                            score += 20
+                if "registration" in endpoints or "signup" in endpoints:
                     score += 20
-            if "registration" in endpoints or "signup" in endpoints:
-                score += 20
+            elif isinstance(endpoints, list):
+                has_login = any("login" in (ep.get("path", "") if isinstance(ep, dict) else str(ep)).lower() for ep in endpoints)
+                if has_login:
+                    score += 60
+                if len(endpoints) >= 3:
+                    score += 40
             return min(score, 100)
 
         elif "overview" in cat_lower:
@@ -120,12 +129,17 @@ class KnowledgeBaseManager:
 
         elif "api" in cat_lower or "inventory" in cat_lower:
             endpoints = data.get("endpoints", [])
-            if len(endpoints) > 0:
-                score += 40
-            if any(ep.get("query_params") or ep.get("body_params") for ep in endpoints):
-                score += 30
-            if len(endpoints) >= 5:
-                score += 30
+            if isinstance(endpoints, list):
+                if len(endpoints) > 0:
+                    score += 40
+                if any(isinstance(ep, dict) and (ep.get("query_params") or ep.get("body_params")) for ep in endpoints):
+                    score += 30
+                elif any("/api" in str(ep) for ep in endpoints):
+                    score += 30
+                if len(endpoints) >= 5:
+                    score += 30
+            elif isinstance(endpoints, dict):
+                score += 60
             return min(score, 100)
 
         return 50 # Default fallback
