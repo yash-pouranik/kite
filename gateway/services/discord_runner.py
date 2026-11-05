@@ -43,8 +43,24 @@ async def on_message(message: discord.Message):
     content = message.content.strip()
     logger.info(f"Received message from {message.author.name} in #{message.channel.name}: {content}")
 
-    # Analyze intent
-    analysis = await dialogue_mgr.analyze_human_turn(content)
+    # Switch Shared Room Context: Fetch last 8 messages from channel history
+    room_history = []
+    try:
+        async for prev_msg in message.channel.history(limit=8, oldest_first=False):
+            author_name = "Kite-Agent" if prev_msg.author.bot else prev_msg.author.name
+            room_history.append(f"{author_name}: {prev_msg.content.strip()}")
+        room_history.reverse()
+    except Exception as e:
+        logger.warning(f"Could not fetch room history: {e}")
+        room_history = [f"{message.author.name}: {content}"]
+
+    session_context = {
+        "channel": message.channel.name,
+        "room_log": room_history
+    }
+
+    # Analyze intent with FULL SHARED CONTEXT
+    analysis = await dialogue_mgr.analyze_human_turn(content, session_context=session_context)
     intent = analysis.get("intent")
     is_ambiguous = analysis.get("is_ambiguous", False)
 
