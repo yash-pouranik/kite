@@ -54,19 +54,20 @@ def _run_kubectl(args: List[str]) -> Dict[str, Any]:
     except Exception as e:
         return {"status": "error", "error": str(e)}
 
-def get_k8s_pods(namespace: str = "gateway") -> Dict[str, Any]:
+def get_k8s_pods(namespace: Optional[str] = None) -> Dict[str, Any]:
     """
-    Lists running Kubernetes pods in the target namespace (e.g. gateway, default).
+    Lists running Kubernetes pods in the target namespace.
     Returns pod names, status, readiness, restart counts, and age.
     """
-    res = _run_kubectl(["get", "pods", f"-n={namespace}", "-o=json"])
+    target_ns = namespace or os.getenv("K8S_NAMESPACE", "default")
+    res = _run_kubectl(["get", "pods", f"-n={target_ns}", "-o=json"])
     if res.get("status") != "success":
         # Fallback to plain kubectl get pods if json format fails
-        plain_res = _run_kubectl(["get", "pods", f"-n={namespace}"])
+        plain_res = _run_kubectl(["get", "pods", f"-n={target_ns}"])
         if plain_res.get("status") == "success":
             return {
                 "status": "success",
-                "namespace": namespace,
+                "namespace": target_ns,
                 "raw_output": plain_res.get("stdout")
             }
         return res
@@ -102,17 +103,18 @@ def get_k8s_pods(namespace: str = "gateway") -> Dict[str, Any]:
         return {"status": "error", "error": f"Failed to parse kubectl output: {e}"}
 
 def tail_k8s_logs(
-    pod_name: Optional[str] = "gateway",
-    namespace: str = "gateway",
+    pod_name: Optional[str] = None,
+    namespace: Optional[str] = None,
     lines: int = 50
 ) -> Dict[str, Any]:
     """
     Tails live runtime logs and stack traces from a Kubernetes pod in the target cluster.
-    Auto-detects matching pod name if partial string is given (e.g. 'gateway' -> 'gateway-7694f79849-z2qg6').
+    Auto-detects matching pod name if partial string is given.
     """
+    target_ns = namespace or os.getenv("K8S_NAMESPACE", "default")
     # 1. Resolve pod name if fuzzy
     target_pod = pod_name or "gateway"
-    pods_res = get_k8s_pods(namespace=namespace)
+    pods_res = get_k8s_pods(namespace=target_ns)
     if pods_res.get("status") == "success" and "pods" in pods_res:
         available_pods = [p["name"] for p in pods_res["pods"]]
         # Find exact or prefix match
@@ -127,7 +129,7 @@ def tail_k8s_logs(
             target_pod = available_pods[0]
 
     # 2. Fetch logs
-    res = _run_kubectl(["logs", f"-n={namespace}", target_pod, f"--tail={lines}"])
+    res = _run_kubectl(["logs", f"-n={target_ns}", target_pod, f"--tail={lines}"])
     if res.get("status") != "success":
         return res
 

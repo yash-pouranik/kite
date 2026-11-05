@@ -1,18 +1,19 @@
 import httpx
 import re
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from urllib.parse import urljoin
+from config import settings
 
 logger = logging.getLogger("cyberwar.tools.web_discovery")
 
-async def crawl_and_discover_target(target_url: str = "https://vynn.urbackend.in") -> Dict[str, Any]:
+async def crawl_and_discover_target(target_url: Optional[str] = None) -> Dict[str, Any]:
     """
     Crawls the target web application, inspects response headers,
     downloads referenced JavaScript bundles, and extracts API endpoints using regex.
     """
-    if not target_url.startswith("http"):
-        target_url = f"https://{target_url}"
+    raw_url = target_url or settings.TARGET_HOST
+    target_url = raw_url if raw_url.startswith("http") else f"https://{raw_url}"
 
     discovered_endpoints = set()
     tech_stack = {}

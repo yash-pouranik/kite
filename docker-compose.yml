@@ -16,18 +16,19 @@ services:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
       - GITHUB_REPO_OWNER=${GITHUB_REPO_OWNER}
       - GITHUB_REPO_NAME=${GITHUB_REPO_NAME}
-      - HOST_REPO_PATH=${HOST_REPO_PATH:-/home/ubuntu/mcp-gateway-k8s}
-      - TARGET_HOST=${TARGET_HOST:-vynn.urbackend.in}
+      - HOST_REPO_PATH=${HOST_REPO_PATH:-./target_repo}
+      - TARGET_HOST=${TARGET_HOST:-target-app}
+      - K8S_NAMESPACE=${K8S_NAMESPACE:-default}
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=postgresql://secops:secops_secure_pass@postgres:5432/cyberwar
     volumes:
       # Live sync gateway code on host git pull
       - ./gateway:/app
       # Host source code repo mount (for native git commands on target repo)
-      - ${HOST_REPO_PATH:-/home/ubuntu/mcp-gateway-k8s}:/app/target_repo
+      - ${HOST_REPO_PATH:-./target_repo}:/app/target_repo
       - /var/run/docker.sock:/var/run/docker.sock
       # Kubernetes cluster credentials mount (read-only for kubectl pod forensics)
-      - ${HOST_KUBE_DIR:-/home/ubuntu/.kube}:/root/.kube:ro
+      - ${HOST_KUBE_DIR:-~/.kube}:/root/.kube:ro
       - /etc/rancher/k3s:/etc/rancher/k3s:ro
     depends_on:
       - redis

@@ -35,7 +35,7 @@ class KiteAgentEngine:
         ) if raw_client else None
 
         self.model = "gpt-6-luna"
-        self.default_target = settings.TARGET_CONTAINER_NAME or "vynn.urbackend.in"
+        self.default_target = settings.TARGET_HOST or settings.TARGET_CONTAINER_NAME or "target-app"
         self._load_system_prompt()
 
     def _load_system_prompt(self):
@@ -43,7 +43,10 @@ class KiteAgentEngine:
         if os.path.exists(prompt_path):
             with open(prompt_path, "r", encoding="utf-8") as f:
                 template = f.read()
-            self.system_prompt = template.format(default_target=self.default_target)
+            self.system_prompt = template.format(
+                default_target=self.default_target,
+                k8s_namespace=settings.K8S_NAMESPACE
+            )
         else:
             self.system_prompt = (
                 f"You are Kite, an autonomous Senior Multi-Agent SecOps Teammate on {self.default_target}. "
@@ -51,7 +54,7 @@ class KiteAgentEngine:
             )
 
     def get_tool_definitions(self) -> List[Dict[str, Any]]:
-        """Returns schemas for all 25 tools dynamically from the central registry."""
+        """Returns schemas for all registered tools dynamically from the central registry."""
         return registry.get_schemas()
 
     async def execute_tool(self, name: str, args: Dict[str, Any]) -> str:

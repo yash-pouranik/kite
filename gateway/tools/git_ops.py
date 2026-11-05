@@ -79,8 +79,8 @@ def get_git_remote_info(repo_dir: Optional[str] = None) -> Dict[str, Any]:
             name, url = parts[0], parts[1]
             remotes[name] = url
             # Extract owner and repo from URL (handles https://, git@, ssh host aliases)
-            # e.g. https://github.com/yash-pouranik/mcp-gateway-k8s.git
-            # e.g. git@github-personal:yash-pouranik/kite.git
+            # e.g. https://github.com/org/repo.git
+            # e.g. git@github.com:org/repo.git
             match = re.search(r"[:/]([a-zA-Z0-9_-]+)/([a-zA-Z0-9_\-\.]+?)(?:\.git)?$", url)
             if match and not owner:
                 owner = match.group(1)

@@ -3,6 +3,7 @@ import json
 import logging
 import httpx
 from typing import Dict, Any, Optional, List
+from config import settings
 
 logger = logging.getLogger("cyberwar.tools.scanner")
 
@@ -12,8 +13,8 @@ class SandboxedScannerRunner:
     1. Sandboxed Nuclei / Nmap in the 'kite-sec-tools' container via Docker SDK.
     2. Built-in Active HTTP Security & Auth Audit engine via httpx.
     """
-    def __init__(self, target_host: str = "vynn.urbackend.in", target_port: int = 443):
-        self.target_host = target_host
+    def __init__(self, target_host: Optional[str] = None, target_port: int = 443):
+        self.target_host = target_host or settings.TARGET_HOST
         self.target_port = target_port
 
     def _get_docker_container(self, container_name: str = "kite-sec-tools"):

@@ -1,7 +1,7 @@
 {
-  "target_name": "Vynn Production Backend",
-  "base_url": "https://vynn.urbackend.in",
-  "business_domain": "Cloud Backend Services (AWS EC2)",
+  "target_name": "Target Application",
+  "base_url": "https://example.com",
+  "business_domain": "Cloud Application Services",
   "technology_stack": {},
   "metadata": {
     "last_scanned_at": null,

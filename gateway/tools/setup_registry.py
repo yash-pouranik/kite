@@ -35,13 +35,13 @@ scanner_runner = SandboxedScannerRunner()
 exploit_toolkit = SafeExploitToolkit()
 virtual_patcher = NginxVirtualPatcher()
 github_service = GitHubGitOpsService()
-verifier_suite = DualPathAuditSuite(target_host=settings.TARGET_CONTAINER_NAME or "vynn.urbackend.in")
+verifier_suite = DualPathAuditSuite(target_host=settings.TARGET_HOST or settings.TARGET_CONTAINER_NAME or "target-app")
 repo_inspector = TargetRepoInspector()
 openapi_parser = OpenAPISchemaParser()
-default_target = settings.TARGET_CONTAINER_NAME or "vynn.urbackend.in"
+default_target = settings.TARGET_HOST or settings.TARGET_CONTAINER_NAME or "target-app"
 
 def register_all_tools():
-    """Binds all 25 DevSecOps and Git tools into the centralized registry."""
+    """Binds all 28 DevSecOps, Git, Kubernetes, and Terminal tools into the centralized registry."""
 
     # 1. Endpoint Web Discovery
     @registry.register(
@@ -50,7 +50,7 @@ def register_all_tools():
         parameters={
             "type": "object",
             "properties": {
-                "target_url": {"type": "string", "description": "The base URL or domain to crawl, e.g. https://vynn.urbackend.in"}
+                "target_url": {"type": "string", "description": "The base URL or domain to crawl (defaults to configured TARGET_HOST)"}
             }
         }
     )
@@ -95,7 +95,7 @@ def register_all_tools():
         parameters={
             "type": "object",
             "properties": {
-                "target_url": {"type": "string", "description": "Target base URL, e.g. https://vynn.urbackend.in"}
+                "target_url": {"type": "string", "description": "Target base URL (defaults to configured target)"}
             }
         }
     )
@@ -155,7 +155,7 @@ def register_all_tools():
         parameters={
             "type": "object",
             "properties": {
-                "target": {"type": "string", "description": "Target hostname, IP, or full URL, e.g. vynn.urbackend.in"}
+                "target": {"type": "string", "description": "Target hostname, IP, or full URL (defaults to configured target)"}
             }
         }
     )
@@ -373,13 +373,14 @@ def register_all_tools():
         parameters={
             "type": "object",
             "properties": {
-                "container_name": {"type": "string", "description": "Container name (default 'vynn' or 'kite-gateway')"},
+                "container_name": {"type": "string", "description": "Container name to tail (defaults to TARGET_CONTAINER_NAME)"},
                 "lines": {"type": "integer", "description": "Number of log lines to tail (default 50)"}
             }
         }
     )
-    def handle_logs(container_name: str = "vynn", lines: int = 50):
-        return tail_container_logs(container_name=container_name, lines=lines)
+    def handle_logs(container_name: Optional[str] = None, lines: int = 50):
+        c_name = container_name or settings.TARGET_CONTAINER_NAME or "target-app"
+        return tail_container_logs(container_name=c_name, lines=lines)
 
     # 22. Check Service Health & Latency
     @registry.register(
@@ -388,12 +389,13 @@ def register_all_tools():
         parameters={
             "type": "object",
             "properties": {
-                "target_url": {"type": "string", "description": "URL to probe (default https://vynn.urbackend.in)"}
+                "target_url": {"type": "string", "description": "URL to probe (defaults to configured TARGET_HOST)"}
             }
         }
     )
     async def handle_health(target_url: Optional[str] = None):
-        return await check_service_health(target_url=target_url)
+        tgt = target_url or (default_target if default_target.startswith("http") else f"https://{default_target}")
+        return await check_service_health(target_url=tgt)
 
     # 23. Local Test Suite Runner
     @registry.register(
@@ -450,32 +452,35 @@ def register_all_tools():
     # 26. Kubernetes Pods Inspector
     @registry.register(
         name="get_k8s_pods",
-        description="Lists active Kubernetes pods in the target cluster namespace (default 'gateway'). Shows pod names, phases, readiness, restart counts, and age.",
+        description="Lists active Kubernetes pods in the target cluster namespace. Shows pod names, phases, readiness, restart counts, and age.",
         parameters={
             "type": "object",
             "properties": {
-                "namespace": {"type": "string", "description": "Target Kubernetes namespace (default 'gateway')"}
+                "namespace": {"type": "string", "description": "Target Kubernetes namespace (defaults to K8S_NAMESPACE in settings)"}
             }
         }
     )
-    def handle_k8s_pods(namespace: str = "gateway"):
-        return get_k8s_pods(namespace=namespace)
+    def handle_k8s_pods(namespace: Optional[str] = None):
+        ns = namespace or settings.K8S_NAMESPACE or "default"
+        return get_k8s_pods(namespace=ns)
 
     # 27. Kubernetes Live Pod Log Tailer
     @registry.register(
         name="tail_k8s_logs",
-        description="Tails live runtime logs, stack traces, and 500 error outputs directly from a Kubernetes pod (e.g. 'gateway-7694f79849-z2qg6' or 'dashboard') in the target namespace.",
+        description="Tails live runtime logs, stack traces, and 500 error outputs directly from a Kubernetes pod in the target namespace.",
         parameters={
             "type": "object",
             "properties": {
-                "pod_name": {"type": "string", "description": "Pod name or prefix (e.g. 'gateway', 'dashboard', 'postgres')"},
-                "namespace": {"type": "string", "description": "Kubernetes namespace (default 'gateway')"},
+                "pod_name": {"type": "string", "description": "Pod name or prefix (e.g. 'gateway', 'dashboard')"},
+                "namespace": {"type": "string", "description": "Kubernetes namespace (defaults to K8S_NAMESPACE in settings)"},
                 "lines": {"type": "integer", "description": "Number of log lines to tail (default 50)"}
             }
         }
     )
-    def handle_k8s_logs(pod_name: str = "gateway", namespace: str = "gateway", lines: int = 50):
-        return tail_k8s_logs(pod_name=pod_name, namespace=namespace, lines=lines)
+    def handle_k8s_logs(pod_name: Optional[str] = None, namespace: Optional[str] = None, lines: int = 50):
+        ns = namespace or settings.K8S_NAMESPACE or "default"
+        p_name = pod_name or "gateway"
+        return tail_k8s_logs(pod_name=p_name, namespace=ns, lines=lines)
 
     # 28. Governed Terminal Execution Tool
     @registry.register(

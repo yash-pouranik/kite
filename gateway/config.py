@@ -24,9 +24,17 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     GOOGLE_AI_API_KEY: str = os.getenv("GOOGLE_AI_API_KEY", "")
     DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN", "")
+    
+    # Target Application & Infrastructure (100% Configurable from .env)
+    TARGET_HOST: str = os.getenv("TARGET_HOST", "target-app")
+    TARGET_CONTAINER_NAME: str = os.getenv("TARGET_CONTAINER_NAME", os.getenv("TARGET_HOST", "target-app"))
+    HOST_REPO_PATH: str = os.getenv("HOST_REPO_PATH", "/app/target_repo")
+    K8S_NAMESPACE: str = os.getenv("K8S_NAMESPACE", "default")
+
+    # GitHub GitOps Integration
     GITHUB_TOKEN: str = os.getenv("GITHUB_TOKEN", "")
     GITHUB_REPO_OWNER: str = os.getenv("GITHUB_REPO_OWNER", "")
-    GITHUB_REPO_NAME: str = os.getenv("GITHUB_REPO_NAME", "vynn")
+    GITHUB_REPO_NAME: str = os.getenv("GITHUB_REPO_NAME", "")
 
     # Switch AI & Proxy Configuration
     SWITCH_TRUST_API_KEY: str = os.getenv("SWITCH_TRUST_API_KEY", "")
@@ -34,19 +42,18 @@ class Settings(BaseSettings):
     SWITCH_SERVER_URL: str = os.getenv("SWITCH_SERVER_URL", "http://switch-server:3000")
 
     # Pinned Models
-    RECON_MODEL: str = "gemini-3.1-flash-lite"
-    ATTACKER_MODEL: str = "gpt-6-luna"
-    FIX_ENGINE_MODEL: str = "gpt-6-luna"
-    VERIFIER_MODEL: str = "gemini-3.1-flash-lite"
+    RECON_MODEL: str = os.getenv("RECON_MODEL", "gemini-3.1-flash-lite")
+    ATTACKER_MODEL: str = os.getenv("ATTACKER_MODEL", "gpt-6-luna")
+    FIX_ENGINE_MODEL: str = os.getenv("FIX_ENGINE_MODEL", "gpt-6-luna")
+    VERIFIER_MODEL: str = os.getenv("VERIFIER_MODEL", "gemini-3.1-flash-lite")
 
     # Infrastructure URLs
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://secops:secops_secure_pass@postgres:5432/cyberwar")
     
-    # Target and Proxy URLs inside Docker Network
-    TARGET_CONTAINER_NAME: str = "vynn"
-    PROXY_CONTAINER_NAME: str = "nginx-proxy"
-    TOOLS_CONTAINER_NAME: str = "kite-sec-tools"
+    # Containers & Paths
+    PROXY_CONTAINER_NAME: str = os.getenv("PROXY_CONTAINER_NAME", "nginx-proxy")
+    TOOLS_CONTAINER_NAME: str = os.getenv("TOOLS_CONTAINER_NAME", "kite-sec-tools")
     NGINX_PATCH_DIR: str = os.getenv("NGINX_PATCH_DIR", "/app/nginx_patches")
 
     class Config:

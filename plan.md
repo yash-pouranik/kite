@@ -4,7 +4,7 @@
 > **Hackathon:** Flip the Switch Hackathon 2026 (WeMakeDevs × DevTools Academy × Switch)  
 > **Track:** Track 01: Best Business Workflow ($2,000 Cash Prize)  
 > **Judging Alignment:** 30% Use of Switch | 25% Technical Execution | 25% Creativity & Impact | 20% Presentation  
-> **Target Environment:** AWS EC2 Staging Host (`https://vynn.urbackend.in`), Local Git Repo (`/home/ubuntu/vynn`)  
+> **Target Environment:** Configured via `.env` (`TARGET_HOST`, `HOST_REPO_PATH`)  
 
 ---
 
@@ -38,10 +38,10 @@ flowchart TD
     end
 
     subgraph Target Application Infrastructure
-        ReconBot --> LiveTarget["🌐 Target Host: vynn.urbackend.in"]
+        ReconBot --> LiveTarget["🌐 Target Host (Configured in .env)"]
         AttackerBot --> LiveTarget
         FixBot --> Nginx["🛡️ Nginx WAF (/etc/nginx/conf.d/)"]
-        FixBot --> GitHub["🐙 GitHub PR Automation (/home/ubuntu/vynn)"]
+        FixBot --> GitHub["🐙 GitHub PR Automation (GitOps)"]
         VerifierBot --> LiveTarget
     end
 ```
@@ -107,7 +107,7 @@ beautifulsoup4==4.12.3
 Kite retains all promised autonomous SecOps capabilities with zero hardcoded scripts:
 
 ### 1. `@recon-bot` (Autonomous Recon & Web Crawler)
-- **Role:** Crawls `vynn.urbackend.in`, parses HTML & JavaScript bundles, and discovers live API routes.
+- **Role:** Crawls configured `TARGET_HOST`, parses HTML & JavaScript bundles, and discovers live API routes.
 - **Underlying Engine:** Google Gemini (`gemini-3.1-flash-lite`) + Python `web_discovery.py`.
 - **Knowledge Cache:** Populates `gateway/knowledge_base/` dynamically (starts at 0% completeness).
 
@@ -119,7 +119,7 @@ Kite retains all promised autonomous SecOps capabilities with zero hardcoded scr
 ### 3. `@fix-engine` (DevSecOps Dual-Track Remediation)
 - **Role:** Generates instant zero-downtime mitigation AND permanent source code patch:
   1. **Immediate Shield:** Injects regex filter into `/etc/nginx/conf.d/patch_sqli.conf` and executes `docker exec nginx nginx -s reload`.
-  2. **Permanent Patch:** Uses `git_service.py` to create branch `secops/fix-auth-sqli` on `/home/ubuntu/vynn` and opens a GitHub Pull Request via GitHub REST API.
+  2. **Permanent Patch:** Uses `github_service.py` to create remediation branch and opens a GitHub Pull Request via GitHub REST API.
 - **Underlying Engine:** OpenAI (`gpt-4o` / `gpt-6-luna`).
 
 ### 4. `@verifier` (Independent Regression & Quality Auditor)
@@ -138,7 +138,7 @@ In the earlier deployment, `discord_runner.py` called `dialogue_manager.py` whic
 
 ### The New Agentic Engine (`agent_engine.py`):
 1. **Full Room History on Every Turn:** The engine fetches the last 8 messages from the Discord channel. The LLM maintains complete context of what was said, what was audited, and what the user asked.
-2. **Native OpenAI Tool Calling:** When the user asks *"can someone check vynn.urbackend.in for auth issues?"*, the model autonomously emits a tool call for `discover_target_endpoints` or `run_security_scan`.
+2. **Native OpenAI Tool Calling:** When the user asks to check the target for auth issues, the model autonomously emits a tool call for `discover_target_endpoints` or `run_security_scan`.
 3. **Natural Language Flexibility:** The agent understands English, Hindi, and Hinglish natively (*"kya kar sakte ho detail me batao"*, *"audit chalu karo"*).
 4. **Resilient Error Handling:** Robust JSON schema validation ensures data structures (lists vs dicts) are handled gracefully without container crashes.
 
@@ -155,7 +155,7 @@ In the earlier deployment, `discord_runner.py` called `dialogue_manager.py` whic
 - Create `gateway/services/switch_trust_wrapper.py` to wrap OpenAI and Gemini clients with `switch-trust-sdk-py` / `flintai-sdk-py`.
 - Ensure headers (`X-Agent-Id`, `X-Agent-Name`, `X-Agent-Session-Id`) are injected on every turn.
 
-### Step 3: Polish Agent Engine with 5 Concrete Security Tools
+### Step 3: Polish Agent Engine with Concrete Security Tools
 - Verify `discover_target_endpoints`, `read_knowledge_base`, `run_security_scan`, `verify_safe_exploit_probe`, `apply_virtual_shield`, and `create_github_pr`.
 - Verify prompt handling for capability queries, Hinglish conversation, and pre-action approvals.
 
@@ -164,6 +164,6 @@ In the earlier deployment, `discord_runner.py` called `dialogue_manager.py` whic
 
 ### Step 5: Verification & Deployment
 - Test tool execution and dialogue simulation locally.
-- Push clean commits to GitHub (`git@github-personal:yash-pouranik/kite.git`).
+- Push clean commits to GitHub.
 - Pull and run on EC2 with `docker-compose up -d --build`.
-- Verify live Discord interaction on `vynn.urbackend.in`.
+- Verify live Discord interaction on configured target host.

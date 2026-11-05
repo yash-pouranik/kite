@@ -5,6 +5,7 @@ import httpx
 import re
 from typing import Dict, Any, List, Optional
 from services.knowledge_manager import KnowledgeBaseManager
+from config import settings
 
 logger = logging.getLogger("cyberwar.tools.openapi_parser")
 
@@ -19,11 +20,13 @@ class OpenAPISchemaParser:
         self.repo_dir = repo_dir
         self.kb = KnowledgeBaseManager()
 
-    async def fetch_and_parse_schema(self, base_url: str = "https://vynn.urbackend.in") -> Dict[str, Any]:
+    async def fetch_and_parse_schema(self, base_url: Optional[str] = None) -> Dict[str, Any]:
         """
         Attempts to fetch OpenAPI/Swagger JSON or YAML from target or local repo.
         """
-        clean_base = base_url.rstrip("/")
+        raw_target = base_url or settings.TARGET_HOST
+        target_url = raw_target if raw_target.startswith("http") else f"https://{raw_target}"
+        clean_base = target_url.rstrip("/")
         endpoints_catalog: Dict[str, Any] = {}
         auth_mechanisms: Dict[str, Any] = {}
 

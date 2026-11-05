@@ -18,8 +18,9 @@ class ConversationalDialogueManager:
         self.api_key = settings.GOOGLE_AI_API_KEY
         self.model_name = settings.RECON_MODEL # gemini-3.1-flash-lite
         self.client = genai.Client(api_key=self.api_key) if self.api_key else None
+        self.default_target = settings.TARGET_HOST or "target-app"
         self.session_memory: Dict[str, Any] = {
-            "last_target": "vynn.urbackend.in",
+            "last_target": self.default_target,
             "last_focus": None
         }
 
@@ -42,10 +43,7 @@ class ConversationalDialogueManager:
 
         # Target extraction
         target = None
-        if "vynn" in msg_lower:
-            target = "vynn.urbackend.in"
-            self.session_memory["last_target"] = target
-        elif "http" in msg_lower:
+        if "http" in msg_lower:
             for part in human_message.split():
                 if "http" in part:
                     target = part.strip("<>").rstrip("/")
@@ -70,7 +68,7 @@ class ConversationalDialogueManager:
                 "intent": "REQUEST_SCAN",
                 "is_ambiguous": False,
                 "clarification_prompt": None,
-                "extracted_target": target or "vynn.urbackend.in",
+                "extracted_target": target or self.default_target,
                 "focus_area": focus_area
             }
 
@@ -90,7 +88,7 @@ class ConversationalDialogueManager:
             "'intent' (REQUEST_SCAN, CONFIRM_ACTION, OVERRIDE_ACTION, GENERAL_INQUIRY), "
             "'is_ambiguous' (true only if zero context or target exists), "
             "'clarification_prompt' (clarifying question if ambiguous, or null), "
-            "'extracted_target' (target URL/domain, e.g. vynn.urbackend.in), "
+            f"'extracted_target' (target URL/domain, e.g. {self.default_target}), "
             "'focus_area' (auth, nginx, endpoints, or null)."
         )
 
@@ -106,7 +104,7 @@ class ConversationalDialogueManager:
             )
             parsed = json.loads(response.text)
             if not parsed.get("extracted_target"):
-                parsed["extracted_target"] = self.session_memory.get("last_target", "vynn.urbackend.in")
+                parsed["extracted_target"] = self.session_memory.get("last_target", self.default_target)
             if not parsed.get("focus_area"):
                 parsed["focus_area"] = focus_area
             return parsed
@@ -116,6 +114,6 @@ class ConversationalDialogueManager:
                 "intent": "REQUEST_SCAN",
                 "is_ambiguous": False,
                 "clarification_prompt": None,
-                "extracted_target": target or "vynn.urbackend.in",
+                "extracted_target": target or self.default_target,
                 "focus_area": focus_area
             }

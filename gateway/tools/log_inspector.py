@@ -2,11 +2,12 @@ import time
 import httpx
 import logging
 from typing import Dict, Any, Optional
+from config import settings
 
 logger = logging.getLogger("cyberwar.tools.logs")
 
 def tail_container_logs(
-    container_name: str = "vynn",
+    container_name: Optional[str] = None,
     lines: int = 50,
     filter_errors: bool = True
 ) -> Dict[str, Any]:
@@ -14,6 +15,7 @@ def tail_container_logs(
     Tails runtime logs from Docker containers using the Docker daemon socket.
     Pinpoints 500 Internal Server Errors, uncaught exceptions, and stack traces.
     """
+    target_name = container_name or settings.TARGET_CONTAINER_NAME or "target-app"
     try:
         import docker
         client = docker.from_env()
@@ -28,7 +30,7 @@ def tail_container_logs(
         target = None
         all_containers = client.containers.list(all=True)
         for c in all_containers:
-            if container_name.lower() in c.name.lower():
+            if target_name.lower() in c.name.lower():
                 target = c
                 break
 
@@ -36,9 +38,9 @@ def tail_container_logs(
             running_names = [c.name for c in all_containers]
             return {
                 "status": "not_found",
-                "searched_for": container_name,
+                "searched_for": target_name,
                 "available_containers": running_names,
-                "message": f"Container matching '{container_name}' not found."
+                "message": f"Container matching '{target_name}' not found."
             }
 
         raw_logs = target.logs(tail=lines, stdout=True, stderr=True)
@@ -69,9 +71,8 @@ async def check_service_health(target_url: Optional[str] = None) -> Dict[str, An
     """
     Probes endpoint response latency, HTTP status code, server header, and service health.
     """
-    url = target_url or "https://vynn.urbackend.in"
-    if not url.startswith("http"):
-        url = f"https://{url}"
+    raw_target = target_url or settings.TARGET_HOST
+    url = raw_target if raw_target.startswith("http") else f"https://{raw_target}"
 
     start_time = time.time()
     try:
