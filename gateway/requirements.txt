@@ -8,7 +8,6 @@ python-dotenv==1.0.1
 
 # Switch AI & Enterprise Guardrails
 switch-trust-sdk-py[all]>=0.1.0
-flintai-sdk-py>=1.0.3
 
 # LLM Orchestration & Agent Frameworks
 openai==1.61.0
