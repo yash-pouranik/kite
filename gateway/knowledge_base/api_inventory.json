@@ -1,53 +1,11 @@
 {
-  "total_endpoints_discovered": 6,
-  "endpoints": [
-    {
-      "path": "/rest/products/search",
-      "method": "GET",
-      "query_params": ["q"],
-      "auth_required": false,
-      "purpose": "Product catalog search with query filtering"
-    },
-    {
-      "path": "/rest/user/login",
-      "method": "POST",
-      "body_params": ["email", "password"],
-      "auth_required": false,
-      "purpose": "User and administrator authentication"
-    },
-    {
-      "path": "/api/BasketItems",
-      "method": "POST",
-      "body_params": ["ProductId", "BasketId", "quantity"],
-      "auth_required": true,
-      "purpose": "Shopping basket management"
-    },
-    {
-      "path": "/rest/user/change-password",
-      "method": "GET",
-      "query_params": ["current", "new", "repeat"],
-      "auth_required": true,
-      "purpose": "User password modification"
-    },
-    {
-      "path": "/api/Complaints",
-      "method": "POST",
-      "body_params": ["message"],
-      "auth_required": false,
-      "purpose": "Customer feedback submission"
-    },
-    {
-      "path": "/api-docs",
-      "method": "GET",
-      "auth_required": false,
-      "purpose": "Swagger / OpenAPI documentation endpoint"
-    }
-  ],
+  "total_endpoints_discovered": 0,
+  "endpoints": [],
   "metadata": {
-    "last_scanned_at": "2026-11-05T01:35:00Z",
-    "last_updated_by": "recon-bot",
-    "discovery_method": "spider_and_swagger_inspection",
-    "knowledge_completeness_percentage": 85,
-    "confidence_score": 0.85
+    "last_scanned_at": null,
+    "last_updated_by": null,
+    "discovery_method": "uninitialized",
+    "knowledge_completeness_percentage": 0,
+    "confidence_score": 0.0
   }
 }

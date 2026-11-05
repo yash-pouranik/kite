@@ -1,18 +1,13 @@
 {
-  "target_name": "OWASP Juice Shop (Staging)",
-  "base_url": "http://nginx-proxy:80",
-  "business_domain": "E-Commerce / Online Retail Store",
-  "technology_stack": {
-    "frontend": "Angular / TypeScript",
-    "backend": "Node.js / Express",
-    "database": "SQLite / Sequelize ORM",
-    "proxy_waf": "Nginx 1.25 Alpine (Reverse Proxy)"
-  },
+  "target_name": "Vynn Production Backend",
+  "base_url": "https://vynn.urbackend.in",
+  "business_domain": "Cloud Backend Services (AWS EC2)",
+  "technology_stack": {},
   "metadata": {
-    "last_scanned_at": "2026-11-05T01:35:00Z",
-    "last_updated_by": "recon-bot",
-    "discovery_method": "header_inspection_and_tech_profiling",
-    "knowledge_completeness_percentage": 85,
-    "confidence_score": 0.85
+    "last_scanned_at": null,
+    "last_updated_by": null,
+    "discovery_method": "uninitialized",
+    "knowledge_completeness_percentage": 0,
+    "confidence_score": 0.0
   }
 }
