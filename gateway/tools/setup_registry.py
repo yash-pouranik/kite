@@ -25,6 +25,7 @@ from tools.log_inspector import tail_container_logs, check_service_health
 from tools.test_runner import run_local_test_suite
 from tools.ci_and_issues import check_github_ci_status, sync_github_issue
 from tools.k8s_ops import get_k8s_pods, tail_k8s_logs
+from tools.terminal_runner import execute_terminal_command
 
 logger = logging.getLogger("cyberwar.tools.setup")
 
@@ -476,4 +477,20 @@ def register_all_tools():
     def handle_k8s_logs(pod_name: str = "gateway", namespace: str = "gateway", lines: int = 50):
         return tail_k8s_logs(pod_name=pod_name, namespace=namespace, lines=lines)
 
-    logger.info("Successfully registered all 27 DevSecOps, Git, and Kubernetes tools in ToolRegistry.")
+    # 28. Governed Terminal Execution Tool
+    @registry.register(
+        name="execute_terminal_command",
+        description="Executes arbitrary CLI commands (e.g. kubectl, git, docker, curl, npm, grep) under strict SecOps safety guardrails. Destructive commands (rm -rf, shutdown) and secret leakage (.env access) are blocked.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "command": {"type": "string", "description": "The CLI command string to execute, e.g. 'kubectl get pods -n=gateway' or 'git status'"},
+                "working_dir": {"type": "string", "description": "Optional working directory (defaults to mounted repository /app/target_repo)"}
+            },
+            "required": ["command"]
+        }
+    )
+    def handle_terminal_exec(command: str, working_dir: Optional[str] = None):
+        return execute_terminal_command(command=command, working_dir=working_dir)
+
+    logger.info("Successfully registered all 28 DevSecOps, Git, Kubernetes, and Terminal tools in ToolRegistry.")

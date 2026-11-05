@@ -12,6 +12,7 @@ from tools.git_ops import get_git_remote_info, get_git_status, get_git_log, get_
 from tools.code_scanner import scan_codebase_sast, scan_codebase_secrets
 from tools.dependency_scanner import scan_dependencies
 from tools.test_runner import run_local_test_suite
+from tools.terminal_runner import execute_terminal_command
 from services.github_service import GitHubGitOpsService
 
 class TestSecOpsTools(unittest.TestCase):
@@ -48,7 +49,8 @@ class TestSecOpsTools(unittest.TestCase):
             "check_github_ci_status",
             "sync_github_issue",
             "apply_virtual_shield",
-            "rollback_virtual_shield"
+            "rollback_virtual_shield",
+            "execute_terminal_command"
         ]
         for req in required:
             self.assertIn(req, tool_names, f"Missing required tool: {req}")
@@ -101,6 +103,28 @@ class TestSecOpsTools(unittest.TestCase):
         self.assertIn("GITHUB_TOKEN is not configured", res["error"])
         # Ensure no fake pull/42 url
         self.assertNotIn("pull/42", str(res))
+
+    def test_07_governed_terminal_runner(self):
+        """Verifies terminal command execution and strict SecOps guardrails."""
+        # 1. Allowed safe command executes cleanly
+        res = execute_terminal_command("git status")
+        self.assertIn(res["status"], ["success", "failed"])
+        self.assertIn("command", res)
+
+        # 2. Destructive command is blocked by guardrail
+        blocked_res = execute_terminal_command("rm -rf /")
+        self.assertEqual(blocked_res["status"], "blocked")
+        self.assertIn("destructive operation detected", blocked_res["error"])
+
+        # 3. Secret file reading is blocked
+        secret_res = execute_terminal_command("cat .env")
+        self.assertEqual(secret_res["status"], "blocked")
+        self.assertIn("environment secrets", secret_res["error"])
+
+        # 4. Unknown / disallowed command prefix is blocked
+        disallowed_res = execute_terminal_command("powershell.exe -c Get-Process")
+        self.assertEqual(disallowed_res["status"], "blocked")
+        self.assertIn("not in the allowed command whitelist", disallowed_res["error"])
 
 if __name__ == "__main__":
     unittest.main()

@@ -110,33 +110,48 @@ class GitHubGitOpsService:
                     if create_ref_res.status_code not in [200, 201]:
                         return {"status": "error", "error": f"Failed to create branch '{branch}': {create_ref_res.text}"}
 
-                # 4. If file change is provided, commit it to the branch
-                if file_path and file_content is not None:
-                    # Get existing file SHA if updating
-                    get_file_res = await client.get(
-                        f"{self.base_url}/repos/{owner}/{repo}/contents/{file_path}?ref={branch}",
-                        headers=headers
+                # 4. Commit Diff Guarantee: Ensure head branch has at least 1 commit difference from base
+                # GitHub API strictly requires a diff to open a Pull Request (avoids HTTP 422 'No commits between')
+                target_file_path = file_path
+                target_file_content = file_content
+                if not target_file_path or target_file_content is None:
+                    safe_branch_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", branch)
+                    target_file_path = f".kite/remediations/{safe_branch_name}.md"
+                    target_file_content = (
+                        f"# 🪁 Autonomous Kite Remediation Record\n\n"
+                        f"- **Title:** {title}\n"
+                        f"- **Branch:** `{branch}`\n"
+                        f"- **Target Repository:** `{owner}/{repo}`\n"
+                        f"- **Timestamp:** {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime())}\n\n"
+                        f"## Description\n{body}\n\n"
+                        f"---\n*Generated autonomously by Kite SecOps Teammate*\n"
                     )
-                    file_sha = None
-                    if get_file_res.status_code == 200:
-                        file_sha = get_file_res.json().get("sha")
 
-                    b64_content = base64.b64encode(file_content.encode("utf-8")).decode("utf-8")
-                    put_payload = {
-                        "message": f"fix: {title}",
-                        "content": b64_content,
-                        "branch": branch
-                    }
-                    if file_sha:
-                        put_payload["sha"] = file_sha
+                # Get existing file SHA if updating
+                get_file_res = await client.get(
+                    f"{self.base_url}/repos/{owner}/{repo}/contents/{target_file_path}?ref={branch}",
+                    headers=headers
+                )
+                file_sha = None
+                if get_file_res.status_code == 200:
+                    file_sha = get_file_res.json().get("sha")
 
-                    commit_res = await client.put(
-                        f"{self.base_url}/repos/{owner}/{repo}/contents/{file_path}",
-                        headers=headers,
-                        json=put_payload
-                    )
-                    if commit_res.status_code not in [200, 201]:
-                        return {"status": "error", "error": f"Failed to commit file change: {commit_res.text}"}
+                b64_content = base64.b64encode(target_file_content.encode("utf-8")).decode("utf-8")
+                put_payload = {
+                    "message": f"kite: {title}",
+                    "content": b64_content,
+                    "branch": branch
+                }
+                if file_sha:
+                    put_payload["sha"] = file_sha
+
+                commit_res = await client.put(
+                    f"{self.base_url}/repos/{owner}/{repo}/contents/{target_file_path}",
+                    headers=headers,
+                    json=put_payload
+                )
+                if commit_res.status_code not in [200, 201]:
+                    return {"status": "error", "error": f"Failed to commit file change to branch: {commit_res.text}"}
 
                 # 5. Open the Pull Request
                 pr_payload = {
