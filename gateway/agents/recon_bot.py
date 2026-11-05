@@ -38,10 +38,24 @@ class ReconBotAgent:
             completeness = cached_knowledge.get("metadata", {}).get("knowledge_completeness_percentage", 0)
             logger.info(f"Recon-Bot utilizing verified knowledge cache for {category} (Completeness: {completeness}%)")
             
+            login_path = "/rest/user/login"
+            params = ["email", "password"]
+            eps = cached_knowledge.get("endpoints", {})
+            if isinstance(eps, dict):
+                login_info = eps.get("login", {})
+                login_path = login_info.get("path", login_path)
+                params = login_info.get("payload_fields", params)
+            elif isinstance(eps, list):
+                for ep in eps:
+                    if "login" in ep.get("path", "").lower():
+                        login_path = ep.get("path", login_path)
+                        params = ep.get("body_params", params)
+                        break
+
             summary = (
                 f"Retrieved verified target knowledge for `{target_label}` from local persistent memory "
-                f"(Completeness: {completeness}%). Verified endpoint `{cached_knowledge.get('endpoints', {}).get('login', {}).get('path', '/rest/user/login')}` "
-                f"accepts parameters: {cached_knowledge.get('endpoints', {}).get('login', {}).get('payload_fields', ['email', 'password'])}."
+                f"(Completeness: {completeness}%). Verified endpoint `{login_path}` "
+                f"accepts parameters: {params}."
             )
             return {
                 "agent": "recon-bot",
