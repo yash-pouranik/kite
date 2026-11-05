@@ -7,6 +7,8 @@ services:
     container_name: kite-gateway
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
