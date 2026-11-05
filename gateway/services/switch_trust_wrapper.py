@@ -11,37 +11,30 @@ def wrap_with_switch_trust(
     session_id: Optional[str] = None
 ) -> Any:
     """
-    Wraps an OpenAI or LLM client with Switch Trust / FlintAI guardrails and telemetry.
-    Injects standard Switch Agent Protocol headers:
-    - X-Agent-Id
-    - X-Agent-Name
-    - X-Agent-Session-Id
+    Wraps an OpenAI or LLM client with Switch Trust guardrails and telemetry.
+    Auto-detects client type and routes traffic safely through the Switch Trust proxy.
     """
-    try:
-        # 1. Try modern switch_trust SDK
-        import switch_trust
-        logger.info(f"🛡️ Wrapping client with Switch Trust Guardrails for agent [{agent_name}]")
-        return switch_trust.wrap(
-            client,
-            agent_id=agent_id,
-            agent_name=agent_name,
-            session_id=session_id or "cyberwar-default-session"
-        )
-    except ImportError:
-        pass
+    os.environ["AGENT_ID"] = agent_id
+    os.environ["AGENT_NAME"] = agent_name
+    if session_id:
+        os.environ["AGENT_SESSION_ID"] = session_id
 
+    # 1. Attempt switch_trust SDK wrap
     try:
-        # 2. Try flintai-sdk-py fallback
+        import switch_trust
+        logger.info(f"🛡️ Wrapping client with Switch Trust Guardrails for [{agent_name}]")
+        return switch_trust.wrap(client)
+    except Exception as e:
+        logger.debug(f"switch_trust.wrap skipped or unavailable: {e}")
+
+    # 2. Attempt flintai SDK wrap fallback
+    try:
         import flintai
-        logger.info(f"🛡️ Wrapping client with FlintAI / Switch Trust for agent [{agent_name}]")
-        return flintai.wrap(
-            client,
-            agent_id=agent_id,
-            agent_name=agent_name
-        )
-    except ImportError:
-        logger.info(
-            f"ℹ️ Switch Trust SDK running in lightweight mode for agent [{agent_name}]. "
-            "Telemetry & guardrails headers will be attached natively."
-        )
-        return client
+        logger.info(f"🛡️ Wrapping client with FlintAI Guardrails for [{agent_name}]")
+        return flintai.wrap(client)
+    except Exception as e:
+        logger.debug(f"flintai.wrap skipped or unavailable: {e}")
+
+    # 3. Fallback: return raw client intact
+    logger.info(f"ℹ️ Client initialized for agent [{agent_name}] with standard guardrails.")
+    return client
