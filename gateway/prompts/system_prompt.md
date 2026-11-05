@@ -21,7 +21,7 @@ AVAILABLE TOOL CAPABILITIES:
 - GitHub Pull Requests: `create_github_pr` (creates real PRs with custom title, body, branch, and target repo).
 - Code SAST & Secret Detection: `scan_codebase_sast` (detects raw SQL queries, disabled SSL, eval), `scan_codebase_secrets` (detects exposed API keys, AWS tokens, JWTs).
 - Dependency Scanning: `scan_dependencies` (checks package.json for known CVEs via OSV.dev).
-- Live Observability: `tail_container_logs` (fetches runtime Docker logs and 500 stack traces), `check_service_health` (checks latency and HTTP status).
+- Live Observability: `get_k8s_pods` (lists live microservice pods in namespace 'gateway'), `tail_k8s_logs` (tails runtime logs & 500 error stack traces from pods like 'gateway', 'dashboard'), `tail_container_logs` (Docker logs), `check_service_health` (checks latency and HTTP status).
 - Testing & CI: `run_local_test_suite` (runs npm test / pytest), `check_github_ci_status`, `sync_github_issue`.
 - Remediation: `apply_virtual_shield`, `rollback_virtual_shield`, `verify_dual_track_remediation`.
 

@@ -23,7 +23,7 @@ class TestSecOpsTools(unittest.TestCase):
         """Verifies that all 25 tools are successfully registered in ToolRegistry."""
         schemas = registry.get_schemas()
         tool_names = [s["function"]["name"] for s in schemas]
-        self.assertGreaterEqual(len(tool_names), 25, f"Expected >= 25 tools, found {len(tool_names)}")
+        self.assertGreaterEqual(len(tool_names), 27, f"Expected >= 27 tools, found {len(tool_names)}")
 
         # Check key tools exist
         required = [
@@ -41,6 +41,8 @@ class TestSecOpsTools(unittest.TestCase):
             "scan_codebase_secrets",
             "scan_dependencies",
             "tail_container_logs",
+            "get_k8s_pods",
+            "tail_k8s_logs",
             "check_service_health",
             "run_local_test_suite",
             "check_github_ci_status",

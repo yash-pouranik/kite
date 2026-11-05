@@ -26,6 +26,9 @@ services:
       # Host source code repo mount (for native git commands on target repo)
       - ${HOST_REPO_PATH:-/home/ubuntu/mcp-gateway-k8s}:/app/target_repo
       - /var/run/docker.sock:/var/run/docker.sock
+      # Kubernetes cluster credentials mount (read-only for kubectl pod forensics)
+      - ${HOST_KUBE_DIR:-/home/ubuntu/.kube}:/root/.kube:ro
+      - /etc/rancher/k3s:/etc/rancher/k3s:ro
     depends_on:
       - redis
       - postgres

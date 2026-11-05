@@ -24,6 +24,7 @@ from tools.dependency_scanner import scan_dependencies
 from tools.log_inspector import tail_container_logs, check_service_health
 from tools.test_runner import run_local_test_suite
 from tools.ci_and_issues import check_github_ci_status, sync_github_issue
+from tools.k8s_ops import get_k8s_pods, tail_k8s_logs
 
 logger = logging.getLogger("cyberwar.tools.setup")
 
@@ -445,4 +446,34 @@ def register_all_tools():
     ):
         return await sync_github_issue(title=title, body=body, labels=labels, target_repo=target_repo)
 
-    logger.info("Successfully registered all 25 DevSecOps and Git tools in ToolRegistry.")
+    # 26. Kubernetes Pods Inspector
+    @registry.register(
+        name="get_k8s_pods",
+        description="Lists active Kubernetes pods in the target cluster namespace (default 'gateway'). Shows pod names, phases, readiness, restart counts, and age.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "namespace": {"type": "string", "description": "Target Kubernetes namespace (default 'gateway')"}
+            }
+        }
+    )
+    def handle_k8s_pods(namespace: str = "gateway"):
+        return get_k8s_pods(namespace=namespace)
+
+    # 27. Kubernetes Live Pod Log Tailer
+    @registry.register(
+        name="tail_k8s_logs",
+        description="Tails live runtime logs, stack traces, and 500 error outputs directly from a Kubernetes pod (e.g. 'gateway-7694f79849-z2qg6' or 'dashboard') in the target namespace.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "pod_name": {"type": "string", "description": "Pod name or prefix (e.g. 'gateway', 'dashboard', 'postgres')"},
+                "namespace": {"type": "string", "description": "Kubernetes namespace (default 'gateway')"},
+                "lines": {"type": "integer", "description": "Number of log lines to tail (default 50)"}
+            }
+        }
+    )
+    def handle_k8s_logs(pod_name: str = "gateway", namespace: str = "gateway", lines: int = 50):
+        return tail_k8s_logs(pod_name=pod_name, namespace=namespace, lines=lines)
+
+    logger.info("Successfully registered all 27 DevSecOps, Git, and Kubernetes tools in ToolRegistry.")
