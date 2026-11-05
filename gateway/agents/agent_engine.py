@@ -84,29 +84,39 @@ class KiteAgentEngine:
         tools = self.get_tool_definitions()
 
         try:
-            # Exclusively use gpt-6-luna with reasoning_effort="none" when using function tools
-            req_kwargs: Dict[str, Any] = {
-                "model": self.model,
-                "messages": messages,
-                "tools": tools,
-                "tool_choice": "auto",
-                "extra_body": {"reasoning_effort": "none"}
-            }
-            try:
-                response = self.client.chat.completions.create(**req_kwargs)
-            except Exception as call_err:
-                if "reasoning_effort" in str(call_err).lower():
-                    req_kwargs.pop("extra_body", None)
-                    req_kwargs["reasoning_effort"] = "none"
+            max_tool_iterations = 5
+            iteration = 0
+
+            while iteration < max_tool_iterations:
+                iteration += 1
+                # Exclusively use gpt-6-luna with reasoning_effort="none" when using function tools
+                req_kwargs: Dict[str, Any] = {
+                    "model": self.model,
+                    "messages": messages,
+                    "tools": tools,
+                    "tool_choice": "auto",
+                    "extra_body": {"reasoning_effort": "none"}
+                }
+                try:
                     response = self.client.chat.completions.create(**req_kwargs)
-                else:
-                    raise call_err
+                except Exception as call_err:
+                    if "reasoning_effort" in str(call_err).lower():
+                        req_kwargs.pop("extra_body", None)
+                        req_kwargs["reasoning_effort"] = "none"
+                        response = self.client.chat.completions.create(**req_kwargs)
+                    else:
+                        raise call_err
 
-            response_message = response.choices[0].message
+                response_message = response.choices[0].message
 
-            # Process tool calls if emitted
-            if response_message.tool_calls:
+                # If no tool calls requested, we have the final assistant message
+                if not response_message.tool_calls:
+                    return response_message.content or "Standing by in room."
+
+                # Append assistant message with tool calls to conversation
                 messages.append(response_message)
+
+                # Execute all tool calls emitted in this step
                 for tool_call in response_message.tool_calls:
                     fn_name = tool_call.function.name
                     fn_args = json.loads(tool_call.function.arguments) if tool_call.function.arguments else {}
@@ -119,21 +129,17 @@ class KiteAgentEngine:
                         "content": tool_output
                     })
 
-                second_kwargs: Dict[str, Any] = {
-                    "model": self.model,
-                    "messages": messages,
-                    "extra_body": {"reasoning_effort": "none"}
-                }
-                try:
-                    second_response = self.client.chat.completions.create(**second_kwargs)
-                except Exception:
-                    second_kwargs.pop("extra_body", None)
-                    second_kwargs["reasoning_effort"] = "none"
-                    second_response = self.client.chat.completions.create(**second_kwargs)
-
-                return second_response.choices[0].message.content or "Task completed successfully."
-
-            return response_message.content or "Standing by in room."
+            # If loop reached max iterations, make final call without tools
+            final_kwargs: Dict[str, Any] = {
+                "model": self.model,
+                "messages": messages,
+                "extra_body": {"reasoning_effort": "none"}
+            }
+            try:
+                final_resp = self.client.chat.completions.create(**final_kwargs)
+                return final_resp.choices[0].message.content or "Task completed successfully."
+            except Exception:
+                return "Task completed successfully."
 
         except Exception as e:
             logger.error(f"Error in Agent Engine turn: {e}", exc_info=True)
