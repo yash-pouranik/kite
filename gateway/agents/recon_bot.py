@@ -38,7 +38,7 @@ class ReconBotAgent:
             completeness = cached_knowledge.get("metadata", {}).get("knowledge_completeness_percentage", 0)
             logger.info(f"Recon-Bot utilizing verified knowledge cache for {category} (Completeness: {completeness}%)")
             
-            login_path = "/rest/user/login"
+            login_path = "/api/auth/login"
             params = ["email", "password"]
             eps = cached_knowledge.get("endpoints", {})
             if isinstance(eps, dict):
@@ -47,9 +47,10 @@ class ReconBotAgent:
                 params = login_info.get("payload_fields", params)
             elif isinstance(eps, list):
                 for ep in eps:
-                    if "login" in ep.get("path", "").lower():
-                        login_path = ep.get("path", login_path)
-                        params = ep.get("body_params", params)
+                    ep_path = ep.get("path", "") if isinstance(ep, dict) else str(ep)
+                    if "login" in ep_path.lower():
+                        login_path = ep_path
+                        params = ep.get("body_params", params) if isinstance(ep, dict) else params
                         break
 
             summary = (
@@ -116,25 +117,25 @@ class ReconBotAgent:
         prompt = f"""
 Target: {target}
 --- Raw Nmap Log ---
-{nmap_log if nmap_log else "Port 80/tcp open http (Nginx reverse proxy to Juice Shop)"}
+{nmap_log if nmap_log else "Port 80/tcp open http (Nginx reverse proxy)"}
 
 --- Raw Nuclei Log ---
-{nuclei_log if nuclei_log else "SQL Injection vulnerability detected on /rest/products/search?q= parameter. Severity: CRITICAL. Template: sqli-error-based."}
+{nuclei_log if nuclei_log else "Authentication / API endpoint profiling completed. Severity: HIGH."}
 """
 
         if not self.client:
             # Fallback structured mock if API key is not yet set
             return {
-                "open_ports": ["80/tcp (HTTP - Nginx Proxy)"],
+                "open_ports": ["80/tcp (HTTP - Nginx Proxy)", "443/tcp (HTTPS)"],
                 "vulnerabilities": [
                     {
-                        "title": "Unsanitized SQL Injection on Search Endpoint",
-                        "endpoint": "/rest/products/search?q=",
-                        "severity": "CRITICAL",
-                        "plain_english_risk": "An attacker could supply SQL query fragments to bypass authentication and dump confidential customer catalogs and database contents."
+                        "title": "Unsanitized Input on Auth Endpoint",
+                        "endpoint": "/api/auth/login",
+                        "severity": "HIGH",
+                        "plain_english_risk": "An attacker could supply malformed authentication requests to test for SQL injection or credential bypass."
                     }
                 ],
-                "executive_summary": f"Profiling completed for {target}. Port 80 is accessible, and a Critical SQL Injection vulnerability was discovered on the product search API.",
+                "executive_summary": f"Profiling completed for {target}. Discovered auth endpoints and active HTTP/HTTPS listeners.",
                 "recommended_next_step": "Attacker Agent should fire a non-destructive read probe (' OR 1=1 --) to confirm exploitability."
             }
 
@@ -151,15 +152,15 @@ Target: {target}
         except Exception as e:
             logger.error(f"Error in Gemini Recon synthesis: {e}")
             return {
-                "open_ports": ["80/tcp (HTTP)"],
+                "open_ports": ["80/tcp (HTTP)", "443/tcp (HTTPS)"],
                 "vulnerabilities": [
                     {
-                        "title": "SQL Injection in Search",
-                        "endpoint": "/rest/products/search?q=",
-                        "severity": "CRITICAL",
-                        "plain_english_risk": "SQL Injection vulnerability verified on search endpoint."
+                        "title": "Authentication Endpoint Inspection Needed",
+                        "endpoint": "/api/auth/login",
+                        "severity": "HIGH",
+                        "plain_english_risk": "Authentication endpoint requires parameter validation."
                     }
                 ],
-                "executive_summary": f"Scan completed for {target}. Discovered a high-risk SQL injection on product search.",
+                "executive_summary": f"Scan completed for {target}. Identified authentication surface for verification.",
                 "recommended_next_step": "Hand off to Attacker Agent for exploit verification."
             }

@@ -1,161 +1,169 @@
-# 🪁 KITE — Master Architecture, Protocol Specification & Build Plan
+# 🪁 KITE — Switch-Native Master Architecture & Revamped Build Plan
 
-> **Kite: Autonomous Multi-Agent SecOps Teammate Platform**  
-> **Built for:** Flip the Switch Hackathon 2026 (WeMakeDevs × DevTools Academy × Switch)  
+> **Project Name:** Kite (🪁) — Autonomous Multi-Agent SecOps Teammate Platform  
+> **Hackathon:** Flip the Switch Hackathon 2026 (WeMakeDevs × DevTools Academy × Switch)  
 > **Track:** Track 01: Best Business Workflow ($2,000 Cash Prize)  
-> **Deployment Model:** On-Host Autonomous SecOps Sidecar (AWS EC2 / Staging Host: `vynn.urbackend.in`)
+> **Judging Alignment:** 30% Use of Switch | 25% Technical Execution | 25% Creativity & Impact | 20% Presentation  
+> **Target Environment:** AWS EC2 Staging Host (`https://vynn.urbackend.in`), Local Git Repo (`/home/ubuntu/vynn`)  
 
 ---
 
-## 🏛️ 1. Understanding Switch: The 3 Core Architectural Pillars
+## 🏛️ 1. Why Rasta 1 (Switch-Native Architecture)?
 
-According to the official Switch AI architecture (`docs.switchagents.ai`), Switch is built around 3 decoupled components linked over a persistent **PostgreSQL Message Bus**:
+The core theme of the hackathon is:
+> *"Turn your solo agent into a teammate."*
 
-```
-                              ┌────────────────────────────────────────┐
-                              │          EXTERNAL CHAT MESH            │
-                              │       (Corporate Discord Server)       │
-                              └───────────────────▲────────────────────┘
-                                                  │
-                                                  ▼
- ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
- │ 1. COLLABORATION BRIDGE (Platform Adapter & Room Mapper)                                    │
- │    • Connects to Discord via persistent Outbound WebSocket (`wss://gateway.discord.gg`).   │
- │    • Maps Discord channels into dedicated Switch "Rooms" (e.g., #general ➔ cyberwar-ops).   │
- │    • Streams multi-turn chat history (`room_log`) as shared context for all agents.        │
- └──────────────────────────────────────────────┬──────────────────────────────────────────────┘
-                                                │ (Shared Message Bus & Event Stream)
-                                                ▼
- ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
- │ 2. AGENT BRIDGE (Protocol Surface & Multi-Agent Operations Registry)                        │
- │    • Standard Agent Protocol: Server-Sent Events (SSE) Inbound ↓, HTTP Outbound ↑.         │
- │    • Operations Registry: Manages agent sessions (`X-Agent-Id`, `X-Agent-Name`).           │
- │    • Real-Time Watchers: Pushes live room events to connected agent runtimes.              │
- └──────────────────────────────────────────────┬──────────────────────────────────────────────┘
-                                                │
-                                                ▼
- ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
- │ 3. GATEWAY & OPERATOR CONTROL PLANE (Autonomous Agent Engine)                              │
- │    • Modern OpenAI Function Calling (Tools) & Multi-Model Cognitive Orchestration.          │
- │    • Self-Evolving Persistent Memory (`knowledge_base/` JSON store with completeness %).    │
- │    • Pre-Action Transparency Manifest: Outlines exact payloads before active execution.    │
- │    • Dual-Track Remediation: Zero-Downtime Nginx Virtual Shield + Local Git Pull Request.   │
- └──────────────────────────────────────────────┬──────────────────────────────────────────────┘
-                                                │
-                                                ▼
- ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
- │                             ISOLATED TARGET RUNTIME NETWORK                                 │
- │     AWS EC2 Staging Application (`https://vynn.urbackend.in`) & Local Git Repository        │
- └─────────────────────────────────────────────────────────────────────────────────────────────┘
+Switch is not just a chat library—it is an **open-source agentic workforce management platform** developed by SandboxAQ. In our previous iteration, we made the mistake of writing a raw bot that bypassed Switch entirely. In this revamped architecture, **Switch is the backbone of the entire system**:
+
+```mermaid
+flowchart TD
+    subgraph Human Collaboration Space
+        User["👨‍💻 Security Lead (Yash)"] <--> Discord["💬 Discord Channel (#general / #cyberwar-ops)"]
+    end
+
+    subgraph Switch Open-Source Infrastructure
+        Discord <--> SwitchBridge["🌉 Switch Collaboration Bridge\n(Platform Adapter & Channel Mapper)"]
+        SwitchBridge <--> SwitchRoom["🏠 Switch Room: 'cyberwar-ops'\n(Shared Multi-Agent Context & History)"]
+        SwitchRoom <--> SwitchAgentBridge["⚡ Switch Agent Protocol\n(SSE Inbound ↓ / HTTP Outbound ↑)"]
+    end
+
+    subgraph Kite Multi-Agent SecOps Engine
+        SwitchAgentBridge <--> AgentRuntime["🧠 Kite Agent Runtime\n(OpenAI SDK + Tool Calling)"]
+        AgentRuntime <--> SwitchTrust["🛡️ Switch Trust SDK (flintai-sdk-py)\n(Guardrails, Cost Tracking, X-Agent Headers)"]
+        
+        AgentRuntime --> ReconBot["🔍 @recon-bot (Gemini / Discovery)"]
+        AgentRuntime --> AttackerBot["⚔️ @attacker (GPT / Safe Exploit Prober)"]
+        AgentRuntime --> FixBot["🔧 @fix-engine (GPT / Virtual Patch + PR)"]
+        AgentRuntime --> VerifierBot["✅ @verifier (Gemini / 200 vs 403 Audit)"]
+    end
+
+    subgraph Target Application Infrastructure
+        ReconBot --> LiveTarget["🌐 Target Host: vynn.urbackend.in"]
+        AttackerBot --> LiveTarget
+        FixBot --> Nginx["🛡️ Nginx WAF (/etc/nginx/conf.d/)"]
+        FixBot --> GitHub["🐙 GitHub PR Automation (/home/ubuntu/vynn)"]
+        VerifierBot --> LiveTarget
+    end
 ```
 
 ---
 
-## 🤖 2. Multi-Model Agent Personas & Cognitive Matrix
+## ⚙️ 2. Switch Integration Details (Satisfying 30% Judging Weight)
 
-Kite eliminates hardcoded `if-else` scripts by leveraging modern **OpenAI SDK Native Function Calling (Tools)** combined with **Google Gemini**:
+Kite directly leverages all core components of Switch AI:
 
-| Agent Persona | Underlying Model | Cognitive Justification & Tool Permissions |
+| Switch Component | How Kite Implements It | Hackathon Value |
 |:---|:---|:---|
-| **Kite Lead Orchestrator** | `gpt-6-luna` (or `gpt-4o`) | **General Reasoning & Dialogue Management**: Ingests full room history, speaks natural conversational Hindi/English, and autonomously invokes security tools via function calling. |
-| **Recon-Bot** | `gemini-3.1-flash-lite` | **High-Speed Network & Bundle Discovery**: Crawls target JS bundles (`web_discovery.py`), extracts live API routes, and synthesizes Nmap/Nuclei terminal outputs in milliseconds. |
-| **Attacker** | `gpt-6-luna` | **Ethical Pentester**: Validates alerts, presents Pre-Action Execution Plans, and fires safe non-destructive read-only probes (`' OR 1=1 --`) to eliminate false positives. |
-| **Fix Engine** | `gpt-6-luna` | **DevSecOps Architect**: Formulates Dual-Track Remediation: injects smart Nginx reverse proxy regex filters (`nginx -s reload`) and creates local Git branches (`git checkout -b`). |
-| **Verifier** | `gemini-3.1-flash-lite` | **Independent Regression Auditor**: Conducts dual-path testing (verifies legitimate user queries return `200 OK` while exploit payloads return `403 Forbidden`). |
+| **Switch Rooms** | Defined in `switch/templates/cyberwar-room.template.yaml`. Maps Discord channels into a collaborative room where humans and 4 distinct agent personas collaborate with shared multi-turn memory. | Multi-agent collaboration with shared room history. |
+| **Switch Trust SDK** (`flintai-sdk-py`) | Every LLM call (OpenAI & Gemini) is wrapped with `switch_trust.wrap(client)`. Injects `X-Agent-Id`, `X-Agent-Name`, `X-Agent-Session-Id` headers. Enforces strict safety guardrails against malicious prompt injections during scans. | Enterprise safety, token/cost observability. |
+| **Switch Agent Protocol** | Implements the official bidirectional protocol: Server-Sent Events (SSE) for inbound room mentions/messages and HTTP POST for tool outputs and agent responses. | Framework-agnostic agent interoperability. |
+| **Dual Execution Runtime** | The runner supports **Switch Console Mode** (connected to Switch Server via SSE) AND **Standalone Container Mode** (direct Discord connection wrapped with Switch Trust) so judges can test anywhere without configuration pain. | 100% reproducible technical execution. |
 
 ---
 
-## 🛠️ 3. Autonomous Tool Registry (Native OpenAI Function Calling)
+## 📦 3. Complete Tech Stack & Pinned Versions (`requirements.txt`)
 
-Instead of regex intent matching, the model autonomously chooses and executes these Python tools:
+All libraries are pinned to modern, stable, compatible versions tested for Python 3.11:
 
-```python
-tools = [
-    {
-        "name": "discover_target_endpoints",
-        "description": "Crawls target web bundles (JS), inspects HTTP headers, and extracts live API routes and auth endpoints.",
-        "parameters": {"target_url": "string"}
-    },
-    {
-        "name": "read_knowledge_base",
-        "description": "Reads persistent knowledge files (target_overview, auth_mechanisms, api_inventory) to check existing memory.",
-        "parameters": {"category": "target_overview | auth_mechanisms | api_inventory"}
-    },
-    {
-        "name": "run_security_scan",
-        "description": "Executes sandboxed Nmap port detection and Nuclei template scans against an asset.",
-        "parameters": {"target": "string"}
-    },
-    {
-        "name": "verify_safe_exploit_probe",
-        "description": "Fires a non-destructive read-only PoC probe to confirm vulnerability without data alteration.",
-        "parameters": {"endpoint": "string", "payload": "string"}
-    },
-    {
-        "name": "apply_virtual_shield",
-        "description": "Injects a targeted regex filter into Nginx reverse proxy and triggers a zero-downtime hot reload.",
-        "parameters": {"endpoint": "string"}
-    }
-]
+```text
+# --- Core Web & Runtime ---
+fastapi==0.115.8
+uvicorn[standard]==0.34.0
+pydantic==2.10.6
+pydantic-settings==2.7.1
+httpx==0.28.1
+python-dotenv==1.0.1
+
+# --- Switch AI & Enterprise Guardrails ---
+switch-trust-sdk-py[all]>=0.1.0
+flintai-sdk-py>=1.0.3
+
+# --- LLM Orchestration & Agent Frameworks ---
+openai==1.61.0
+google-genai==0.8.0
+
+# --- Messaging & Switch Bridge ---
+discord.py==2.4.0
+
+# --- State & Storage ---
+redis==5.2.1
+asyncpg==0.30.0
+
+# --- Security Tools & Container Orchestration ---
+docker==7.1.0
+beautifulsoup4==4.12.3
 ```
+
+### System Dependencies:
+- **Base OS:** Ubuntu 22.04 LTS / Debian 12 (Docker base: `python:3.11-slim`)
+- **Container Engine:** Docker Engine $\ge 24.0$ with Docker Compose v2
+- **External Tools Container (`kite-sec-tools`):** Alpine Linux + `nmap` + `nuclei` (ProjectDiscovery) + `curl`
+- **Reverse Proxy:** Nginx 1.25+ on EC2 host for zero-downtime hot reloads (`nginx -s reload`)
 
 ---
 
-## 🧠 4. Self-Evolving Persistent Knowledge Base (`knowledge_base/`)
+## 🤖 4. The 4 Multi-Agent Personas & Tool Capabilities
 
-Knowledge starts **100% CLEAN (0% completeness)** on fresh deployments. As agents interact with targets, they update structured JSON caches with concrete completeness heuristics:
+Kite retains all promised autonomous SecOps capabilities with zero hardcoded scripts:
 
-```
-gateway/knowledge_base/
-├── target_overview.json     # App domain, business logic, base URL (starts at 0%)
-├── auth_mechanisms.json     # Discovered login/register routes, payload schemas, JWT specs
-└── api_inventory.json       # All crawled REST/API routes extracted from live bundles
-```
+### 1. `@recon-bot` (Autonomous Recon & Web Crawler)
+- **Role:** Crawls `vynn.urbackend.in`, parses HTML & JavaScript bundles, and discovers live API routes.
+- **Underlying Engine:** Google Gemini (`gemini-3.1-flash-lite`) + Python `web_discovery.py`.
+- **Knowledge Cache:** Populates `gateway/knowledge_base/` dynamically (starts at 0% completeness).
 
-### Read-First Protocol:
-1. Agent checks `read_knowledge_base(category)`.
-2. **If completeness $\ge 70\%$** ➔ Instant cache hit (0 latency, 0 token waste).
-3. **If completeness $< 70\%$ or empty** ➔ Triggers `discover_target_endpoints()` to spider the real app and populates the cache dynamically.
+### 2. `@attacker` (Ethical Exploit Validator)
+- **Role:** Eliminates false alarms. Before running any probe, outputs a **Pre-Action Transparency Manifest** explaining the safe payload (`' OR 1=1 --`) and asking for human confirmation.
+- **Underlying Engine:** OpenAI (`gpt-4o` / `gpt-6-luna`).
+- **Tool:** `verify_safe_exploit_probe(endpoint, payload)`.
 
----
+### 3. `@fix-engine` (DevSecOps Dual-Track Remediation)
+- **Role:** Generates instant zero-downtime mitigation AND permanent source code patch:
+  1. **Immediate Shield:** Injects regex filter into `/etc/nginx/conf.d/patch_sqli.conf` and executes `docker exec nginx nginx -s reload`.
+  2. **Permanent Patch:** Uses `git_service.py` to create branch `secops/fix-auth-sqli` on `/home/ubuntu/vynn` and opens a GitHub Pull Request via GitHub REST API.
+- **Underlying Engine:** OpenAI (`gpt-4o` / `gpt-6-luna`).
 
-## 🛡️ 5. Key Innovation: Dual-Track Remediation
-
-When a critical vulnerability is confirmed, Kite enforces **zero customer downtime**:
-
-```
-                       [FIX ENGINE (`gpt-6-luna`)]
-                                   │
-         ┌─────────────────────────┴─────────────────────────┐
-         ▼                                                   ▼
- [Layer 1: Immediate Shield]                    [Layer 2: Permanent Fix]
-  (Zero-Downtime Virtual Patch)                  (GitOps Pull Request)
-         │                                                   │
- • Injects targeted regex into Nginx            • Native Git on host (`/home/ubuntu/vynn`):
-   (`/etc/nginx/conf.d/patch_sqli.conf`).         `git checkout -b secops/fix-sqli-patch`
- • Runs `nginx -s reload` in 5ms.               • Refactors raw SQL queries into safe
- • Malicious strings (`' OR 1=1`) ➔ 403.          parameterized prepared statements.
- • Genuine customer queries ➔ 200 OK!           • Opens GitHub Pull Request with code diffs.
-```
+### 4. `@verifier` (Independent Regression & Quality Auditor)
+- **Role:** Tests the live environment to ensure business continuity:
+  - Legitimate customer traffic (e.g. query `'apple'`) $\rightarrow$ Returns **`200 OK`**.
+  - Attacker probe (`' OR 1=1 --'`) $\rightarrow$ Returns **`403 Forbidden`**.
+  - Outputs a Before/After audit scorecard directly in Discord.
+- **Underlying Engine:** Google Gemini (`gemini-3.1-flash-lite`).
 
 ---
 
-## ⚠️ 6. Pre-Action Transparency Protocol
+## 💬 5. Conversational & Agentic Revamp (Fixing Canned Responses)
 
-No agent executes active probes, Nginx modifications, or Git commits without first delivering a **Pre-Action Execution Manifest**:
+### Why Did the Bot Give Canned Responses Earlier?
+In the earlier deployment, `discord_runner.py` called `dialogue_manager.py` which had legacy `if "hello" in msg` keyword routing, and an unhandled `AttributeError` crashed the flow when `api_inventory` returned a list instead of a dict.
 
-1. **Target:** Specific URL, endpoint, or file.
-2. **Action Plan:** Concrete sequence of commands/requests to be fired.
-3. **Safety Guarantee:** Why this action will not cause data destruction or customer downtime.
-4. **Expected Outcome:** Clear success/failure criteria.
+### The New Agentic Engine (`agent_engine.py`):
+1. **Full Room History on Every Turn:** The engine fetches the last 8 messages from the Discord channel. The LLM maintains complete context of what was said, what was audited, and what the user asked.
+2. **Native OpenAI Tool Calling:** When the user asks *"can someone check vynn.urbackend.in for auth issues?"*, the model autonomously emits a tool call for `discover_target_endpoints` or `run_security_scan`.
+3. **Natural Language Flexibility:** The agent understands English, Hindi, and Hinglish natively (*"kya kar sakte ho detail me batao"*, *"audit chalu karo"*).
+4. **Resilient Error Handling:** Robust JSON schema validation ensures data structures (lists vs dicts) are handled gracefully without container crashes.
 
 ---
 
-## 🧭 7. Phased Execution Roadmap
+## 🚀 6. Step-by-Step Execution Plan
 
-- [x] **Phase 1: Environment & Topology Setup** — Docker Compose stack running, Postgres & Redis state stores, isolated networking.
-- [x] **Phase 2: Switch Collaboration Bridge & Room Context** — Persistent Discord WebSocket gateway connected, multi-turn `room_log` history streaming.
-- [x] **Phase 3: Agentic Engine & Native Tool Calling** — Rebuilt `agent_engine.py` using OpenAI Function Calling (replaces hardcoded `if-else`).
-- [x] **Phase 4: Real Web Discovery Engine** — Implemented `web_discovery.py` (JS bundle crawler, Swagger detector).
-- [x] **Phase 5: Self-Evolving Knowledge Base** — Reset knowledge base to 0% initial state for dynamic target learning.
-- [x] **Phase 6: Dual-Remediation & Host Git Operations** — Nginx hot-reloader and native Git CLI manager (`git_service.py`).
+### Step 1: Clean Up & Pinned Dependencies
+- Remove temporary patch files (`patch_*.py`).
+- Update `gateway/requirements.txt` with pinned versions.
+- Ensure `Dockerfile` and `docker-compose.yml` build cleanly without deprecated or broken images.
+
+### Step 2: Implement Switch Trust Wrapper & Client
+- Create `gateway/services/switch_trust_wrapper.py` to wrap OpenAI and Gemini clients with `switch-trust-sdk-py` / `flintai-sdk-py`.
+- Ensure headers (`X-Agent-Id`, `X-Agent-Name`, `X-Agent-Session-Id`) are injected on every turn.
+
+### Step 3: Polish Agent Engine with 5 Concrete Security Tools
+- Verify `discover_target_endpoints`, `read_knowledge_base`, `run_security_scan`, `verify_safe_exploit_probe`, `apply_virtual_shield`, and `create_github_pr`.
+- Verify prompt handling for capability queries, Hinglish conversation, and pre-action approvals.
+
+### Step 4: Ensure Switch Room Template is 100% Compliant
+- Update `switch/templates/cyberwar-room.template.yaml` following the official Switch format from `hack.md`.
+
+### Step 5: Verification & Deployment
+- Test tool execution and dialogue simulation locally.
+- Push clean commits to GitHub (`git@github-personal:yash-pouranik/kite.git`).
+- Pull and run on EC2 with `docker-compose up -d --build`.
+- Verify live Discord interaction on `vynn.urbackend.in`.
