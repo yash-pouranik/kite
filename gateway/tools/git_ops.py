@@ -8,6 +8,12 @@ logger = logging.getLogger("cyberwar.tools.git")
 
 DEFAULT_TARGET_REPO = os.getenv("TARGET_REPO_PATH", "/app/target_repo")
 
+# Auto-configure safe directory globally on module load
+try:
+    subprocess.run(["git", "config", "--global", "--add", "safe.directory", "*"], check=False)
+except Exception:
+    pass
+
 def _resolve_repo_path(repo_dir: Optional[str] = None) -> str:
     """Resolves target repository path across container and local environments."""
     if repo_dir and os.path.exists(repo_dir):
@@ -30,7 +36,9 @@ def _run_git_cmd(args: List[str], repo_dir: Optional[str] = None) -> Dict[str, A
         }
 
     try:
-        cmd = ["git"] + args
+        # -c safe.directory=* prevents dubious ownership errors when host directory
+        # is mounted into Docker with a different user UID (e.g. root vs ubuntu)
+        cmd = ["git", "-c", "safe.directory=*"] + args
         proc = subprocess.run(
             cmd,
             cwd=target_path,
