@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from google import genai
 from config import settings
 from tools.scanner_runner import SandboxedScannerRunner
