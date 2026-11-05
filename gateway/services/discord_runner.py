@@ -57,9 +57,11 @@ async def on_message(message: discord.Message):
     # 2. Request Scan
     if intent == "REQUEST_SCAN":
         target = analysis.get("extracted_target") or incident_state["target"]
+        focus_area = analysis.get("focus_area")
         async with message.channel.typing():
-            await message.channel.send(f"🔍 **Recon-Bot:** Starting target profiling and knowledge inspection on `{target}`...")
-            recon_data = await recon_agent.execute_reconnaissance(target)
+            focus_str = f" (Focus: {focus_area.upper()})" if focus_area else ""
+            await message.channel.send(f"🔍 **Recon-Bot:** Starting target profiling and knowledge inspection on `{target}`{focus_str}...")
+            recon_data = await recon_agent.execute_reconnaissance(target, focus_area=focus_area)
             summary = recon_data.get("findings", {}).get("executive_summary", "")
 
             # Attacker proposes safe PoC probe
