@@ -19,6 +19,8 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=postgresql://secops:secops_secure_pass@postgres:5432/cyberwar
     volumes:
+      # Live sync gateway code on host git pull
+      - ./gateway:/app
       # Host source code repo mount (for native git commands on vynn)
       - ${HOST_REPO_PATH:-/home/ubuntu/vynn}:/app/target_repo
       - /var/run/docker.sock:/var/run/docker.sock

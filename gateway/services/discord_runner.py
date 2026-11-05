@@ -26,7 +26,8 @@ async def on_message(message: discord.Message):
         return
 
     content = message.content.strip()
-    logger.info(f"Received message from {message.author.name} in #{message.channel.name}: {content}")
+    channel_name = getattr(message.channel, "name", "direct-message")
+    logger.info(f"Received message from {message.author.name} in #{channel_name}: {content}")
 
     # 1. Fetch channel message history for true Switch Room Context
     room_history = []
