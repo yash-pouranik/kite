@@ -36,7 +36,7 @@ class KiteAgentEngine:
             agent_name="Kite-SecOps-Teammate"
         ) if raw_client else None
 
-        self.model = settings.ATTACKER_MODEL or "gpt-4o"
+        self.model = "gpt-6-luna"
         self.kb = KnowledgeBaseManager()
         self.scanner = SandboxedScannerRunner()
         self.exploit = SafeExploitToolkit()
@@ -277,24 +277,13 @@ class KiteAgentEngine:
         tools = self.get_tool_definitions()
 
         try:
-            model_to_use = self.model
-            
-            try:
-                response = self.client.chat.completions.create(
-                    model=model_to_use,
-                    messages=messages,
-                    tools=tools,
-                    tool_choice="auto"
-                )
-            except Exception as model_err:
-                logger.warning(f"Model {model_to_use} failed ({model_err}), falling back to gpt-4o")
-                model_to_use = "gpt-4o"
-                response = self.client.chat.completions.create(
-                    model=model_to_use,
-                    messages=messages,
-                    tools=tools,
-                    tool_choice="auto"
-                )
+            # Exclusively use gpt-6-luna
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                tools=tools,
+                tool_choice="auto"
+            )
 
             response_message = response.choices[0].message
 
@@ -314,7 +303,7 @@ class KiteAgentEngine:
                     })
 
                 second_response = self.client.chat.completions.create(
-                    model=model_to_use,
+                    model=self.model,
                     messages=messages
                 )
                 return second_response.choices[0].message.content or "Task completed successfully."
