@@ -82,7 +82,7 @@ services:
 
   # ── Optional Self-Hosted Switch Server (Official Switch Rooms & Agent Bridge) ──
   switch-server:
-    image: ${SWITCH_SERVER_IMAGE:-ghcr.io/sandbox-quantum/switch:latest}
+    image: ${SWITCH_SERVER_IMAGE:-ghcr.io/sandbox-quantum/switch-core:latest}
     container_name: kite-switch-server
     ports:
       - "8080:8000"
