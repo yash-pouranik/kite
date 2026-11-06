@@ -38,6 +38,7 @@ services:
       - redis
       - postgres
       - sec-tools
+      - switch-server
     networks:
       - secops-net
 
@@ -51,6 +52,11 @@ services:
       - POSTGRES_USER=secops
       - POSTGRES_PASSWORD=secops_secure_pass
       - POSTGRES_DB=cyberwar
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U secops -d cyberwar"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./gateway/db/migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
@@ -77,6 +83,41 @@ services:
     cap_add:
       - NET_RAW
       - NET_ADMIN
+    networks:
+      - secops-net
+
+  # ── Official Switch Server (Switch Rooms & Agent Bridge) ──
+  switch-server:
+    image: ${SWITCH_SERVER_IMAGE:-ghcr.io/sandbox-quantum/switch-core:latest}
+    container_name: kite-switch-server
+    restart: unless-stopped
+    ports:
+      - "8080:8000"
+      - "3000:3000"
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=secops
+      - DB_PASSWORD=secops_secure_pass
+      - DB_OWNER_USER=secops
+      - DB_OWNER_PASSWORD=secops_secure_pass
+      - DB_NAME=cyberwar
+      - DB_REQUIRE_RESTRICTED_ROLE=false
+      - ID_SERVER_NAME=localhost
+      - MATRIX_SERVER_NAME=localhost
+      - AGENT_REGISTRATION_TOKEN=${SWITCH_AGENT_REGISTRATION_TOKEN:-secops-switch-token-2026}
+      - SECRET_KEYS=${SWITCH_SECRET_KEYS:-k1:secops_master_secret_key_32_chars_min_12345678}
+      - GATEWAY_COOKIE_SECURE=false
+      - GATEWAY_ADMIN_EMAIL=${SWITCH_ADMIN_EMAIL:-admin@kite-secops.local}
+      - GATEWAY_ADMIN_PASSWORD=${SWITCH_ADMIN_PASS:-SecOpsAdminPass2026!}
+      - FRONTEND_BASE_URL=http://localhost:3000
+      - GATEWAY_PUBLIC_URL=http://localhost:8080
+      - MESSAGING_PUBLIC_URL=http://localhost:8080
+      - DISCORD_APP_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_APP_APPLICATION_ID=${DISCORD_APP_APPLICATION_ID:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - secops-net
 
