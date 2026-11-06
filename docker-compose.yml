@@ -80,26 +80,6 @@ services:
     networks:
       - secops-net
 
-  # ── Optional Self-Hosted Switch Server (Official Switch Rooms & Agent Bridge) ──
-  switch-server:
-    image: ${SWITCH_SERVER_IMAGE:-ghcr.io/sandbox-quantum/switch-core:latest}
-    container_name: kite-switch-server
-    ports:
-      - "8080:8000"
-      - "3000:3000"
-    environment:
-      - AGENT_REGISTRATION_TOKEN=${SWITCH_AGENT_REGISTRATION_TOKEN:-secops-switch-token-2026}
-      - SECRET_KEYS=${SWITCH_SECRET_KEYS:-k1:secops_master_secret_key_32_chars_min}
-      - GATEWAY_ADMIN_EMAIL=${SWITCH_ADMIN_EMAIL:-admin@kite-secops.local}
-      - GATEWAY_ADMIN_PASSWORD=${SWITCH_ADMIN_PASS:-SecOpsAdminPass2026!}
-      - DATABASE_URL=postgresql://secops:secops_secure_pass@postgres:5432/cyberwar
-    depends_on:
-      - postgres
-    networks:
-      - secops-net
-    profiles:
-      - with-switch
-
 volumes:
   pgdata:
   redisdata:
