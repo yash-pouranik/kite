@@ -110,9 +110,6 @@ services:
       - GATEWAY_COOKIE_SECURE=false
       - GATEWAY_ADMIN_EMAIL=${SWITCH_ADMIN_EMAIL:-admin@kite-secops.local}
       - GATEWAY_ADMIN_PASSWORD=${SWITCH_ADMIN_PASS:-SecOpsAdminPass2026!}
-      - FRONTEND_BASE_URL=http://localhost:3000
-      - GATEWAY_PUBLIC_URL=http://localhost:8080
-      - MESSAGING_PUBLIC_URL=http://localhost:8080
       - DISCORD_APP_BOT_TOKEN=${DISCORD_BOT_TOKEN}
       - DISCORD_APP_APPLICATION_ID=${DISCORD_APP_APPLICATION_ID:-}
     depends_on:
