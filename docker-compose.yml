@@ -19,6 +19,10 @@ services:
       - HOST_REPO_PATH=${HOST_REPO_PATH:-./target_repo}
       - TARGET_HOST=${TARGET_HOST:-target-app}
       - K8S_NAMESPACE=${K8S_NAMESPACE:-default}
+      - SWITCH_SERVER_URL=${SWITCH_SERVER_URL:-http://switch-server:8000}
+      - SWITCH_AGENT_REGISTRATION_TOKEN=${SWITCH_AGENT_REGISTRATION_TOKEN:-secops-switch-token-2026}
+      - SWITCH_AGENT_ID=${SWITCH_AGENT_ID:-kite-secops}
+      - SWITCH_ROOM_ID=${SWITCH_ROOM_ID:-cyberwar-ops}
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=postgresql://secops:secops_secure_pass@postgres:5432/cyberwar
     volumes:
@@ -75,6 +79,26 @@ services:
       - NET_ADMIN
     networks:
       - secops-net
+
+  # ── Optional Self-Hosted Switch Server (Official Switch Rooms & Agent Bridge) ──
+  switch-server:
+    image: ${SWITCH_SERVER_IMAGE:-ghcr.io/sandbox-quantum/switch:latest}
+    container_name: kite-switch-server
+    ports:
+      - "8080:8000"
+      - "3000:3000"
+    environment:
+      - AGENT_REGISTRATION_TOKEN=${SWITCH_AGENT_REGISTRATION_TOKEN:-secops-switch-token-2026}
+      - SECRET_KEYS=${SWITCH_SECRET_KEYS:-k1:secops_master_secret_key_32_chars_min}
+      - GATEWAY_ADMIN_EMAIL=${SWITCH_ADMIN_EMAIL:-admin@kite-secops.local}
+      - GATEWAY_ADMIN_PASSWORD=${SWITCH_ADMIN_PASS:-SecOpsAdminPass2026!}
+      - DATABASE_URL=postgresql://secops:secops_secure_pass@postgres:5432/cyberwar
+    depends_on:
+      - postgres
+    networks:
+      - secops-net
+    profiles:
+      - with-switch
 
 volumes:
   pgdata:

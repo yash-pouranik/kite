@@ -126,5 +126,41 @@ class TestSecOpsTools(unittest.TestCase):
         self.assertEqual(disallowed_res["status"], "blocked")
         self.assertIn("not in the allowed command whitelist", disallowed_res["error"])
 
+    def test_08_switch_agent_protocol_client(self):
+        """Test Switch Agent Protocol WebSocket client frame handling and heartbeat."""
+        from services.switch_client import SwitchAgentProtocolClient
+        import json
+
+        client = SwitchAgentProtocolClient()
+        self.assertEqual(client.room_id, "cyberwar-ops")
+        self.assertEqual(client.agent_id, "kite-secops")
+        self.assertTrue(client.ws_base_url.startswith("ws://") or client.ws_base_url.startswith("wss://"))
+
+        # Mock WebSocket to test ping/pong frame handling
+        class MockWS:
+            def __init__(self):
+                self.sent = []
+            async def send(self, payload):
+                self.sent.append(payload)
+
+        mock_ws = MockWS()
+        client.last_cursor = 42
+
+        # 1. Ping receives pong with cursor
+        asyncio.run(client._handle_incoming_frame(json.dumps({"type": "ping"}), mock_ws))
+        self.assertEqual(len(mock_ws.sent), 1)
+        pong = json.loads(mock_ws.sent[0])
+        self.assertEqual(pong.get("type"), "pong")
+        self.assertEqual(pong.get("cursor"), 42)
+
+        # 2. Connection state updates generation & cursor
+        asyncio.run(client._handle_incoming_frame(json.dumps({
+            "type": "connection_state",
+            "generation": 105,
+            "cursor": 88
+        }), mock_ws))
+        self.assertEqual(client.generation, 105)
+        self.assertEqual(client.last_cursor, 88)
+
 if __name__ == "__main__":
     unittest.main()

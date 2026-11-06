@@ -36,10 +36,14 @@ class Settings(BaseSettings):
     GITHUB_REPO_OWNER: str = os.getenv("GITHUB_REPO_OWNER", "")
     GITHUB_REPO_NAME: str = os.getenv("GITHUB_REPO_NAME", "")
 
-    # Switch AI & Proxy Configuration
+    # Switch AI & Switch Rooms Configuration
     SWITCH_TRUST_API_KEY: str = os.getenv("SWITCH_TRUST_API_KEY", "")
     SWITCH_TRUST_GATEWAY_URL: str = os.getenv("SWITCH_TRUST_GATEWAY_URL", "")
-    SWITCH_SERVER_URL: str = os.getenv("SWITCH_SERVER_URL", "http://switch-server:3000")
+    SWITCH_SERVER_URL: str = os.getenv("SWITCH_SERVER_URL", "http://switch-server:8000")
+    SWITCH_AGENT_REGISTRATION_TOKEN: str = os.getenv("SWITCH_AGENT_REGISTRATION_TOKEN", "")
+    SWITCH_AGENT_ID: str = os.getenv("SWITCH_AGENT_ID", "kite-secops")
+    SWITCH_AGENT_API_KEY: str = os.getenv("SWITCH_AGENT_API_KEY", "")
+    SWITCH_ROOM_ID: str = os.getenv("SWITCH_ROOM_ID", "cyberwar-ops")
 
     # Pinned Models
     RECON_MODEL: str = os.getenv("RECON_MODEL", "gemini-3.1-flash-lite")

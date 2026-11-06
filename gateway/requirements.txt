@@ -15,6 +15,7 @@ google-genai==0.8.0
 
 # Messaging & Switch Bridge
 discord.py==2.4.0
+websockets>=12.0
 
 # State & Storage
 redis==5.2.1
