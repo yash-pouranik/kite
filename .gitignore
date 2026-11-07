@@ -53,3 +53,7 @@ redisdata/
 # Scans output & temporary artifacts
 scans/*.json
 scans/*.xml
+
+# Local blog drafts
+BLOG.md
+BLOG*.md
