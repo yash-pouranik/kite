@@ -6,11 +6,14 @@
 
 [![Built for Flip the Switch Hackathon](https://img.shields.io/badge/Flip_the_Switch-Hackathon_2026-6C5CE7?style=for-the-badge&logo=rocket)](https://www.wemakedevs.org/hackathons/switch)
 [![Switch Protocol](https://img.shields.io/badge/Orchestrated_by-Switch_Rooms-00CEC9?style=for-the-badge)](https://switchagents.ai)
+[![Architecture Deepdive](https://img.shields.io/badge/Architecture_Deepdive-Medium_Article-000000?style=for-the-badge&logo=medium)](https://medium.com/@yashpouranik124/building-kite-a-guardrailed-devsecops-copilot-on-the-switch-protocol-460ccedeb964)
 [![Models](https://img.shields.io/badge/Models-GPT--6--Luna_%7C_Gemini--3.1--Flash--Lite-FD79A8?style=for-the-badge)](https://openai.com)
 [![License](https://img.shields.io/badge/License-MIT-0984E3?style=for-the-badge)](LICENSE)
 
 <br/>
 
+> 📖 **Architecture Deep-Dive:** Read our architectural breakdown on [Medium: Building Kite: A Guardrailed DevSecOps Copilot on the Switch Protocol](https://medium.com/@yashpouranik124/building-kite-a-guardrailed-devsecops-copilot-on-the-switch-protocol-460ccedeb964).
+>
 > **Track:** Track 01: Best Business Workflow  
 > **Core Thesis:** Engineering teams do not let autonomous AI agents near production because agents lack accountability, separation of duties, and hard governance. Kite implements the SOC **Four-Eyes Principle** inside Switch Rooms: specialized agents scout, validate, and remediate, but **no irreversible action can execute without verified human sign-off enforced at the tool layer**.
 
@@ -89,23 +92,32 @@ Every single environment variable in `.env` is explained below with its purpose,
 | `VERIFIER_MODEL` | No | `gemini-3.1-flash-lite` | Distinct model family ensuring zero cross-model confirmation bias during regression audits. | Managed internally. |
 | `MAX_TOOL_ITERATIONS` | No | `10` | Caps sequential tool hops per incident turn (prevents infinite tool loops while allowing deep multi-step chains). | Integer value (e.g. `10` or `12`). Set higher if chaining extensive recon + scan + PR workflows. |
 
-#### C. Discord & Switch Integration
+#### C. Switch Multi-Agent Protocol & Room Fabric (MANDATORY)
+
+The Switch Protocol is the **foundational multi-agent messaging and room orchestration fabric** of Kite. All agents (`@recon-bot`, `@attacker`, `@fix-engine`, `@verifier`) and the human lead collaborate within this shared, append-only room context.
 
 | Variable | Required | Default | Why it exists (Purpose) | Where to get it (Source) |
 |:---|:---:|:---:|:---|:---|
-| `DISCORD_BOT_TOKEN` | **Yes** | *None* | Connects Kite to your team Discord server so `@CyberWar-Room` can receive room messages and post agent replies. | [Discord Developer Portal](https://discord.com/developers/applications) ➡️ Select/Create App ➡️ **Bot** tab ➡️ Click **Reset Token** ➡️ Enable **Message Content Intent**. |
+| `SWITCH_SERVER_URL` | **Yes (Core Protocol)** | `http://switch-server:8000` | Address of the Switch Core broker routing room WebSocket frames and inter-agent message exchanges. | In Docker, points to internal service `http://switch-server:8000`. If running locally, `http://localhost:8000`. |
+| `SWITCH_ROOM_ID` | **Yes (Core Protocol)** | `cyberwar-ops` | The target Switch Room where multi-agent governance, room state, and Four-Eyes approvals reside. | Choose your team's room identifier (e.g. `cyberwar-ops` or `secops-war-room`). |
+| `SWITCH_AGENT_ID` | **Yes (Core Protocol)** | `kite-secops` | Unique cryptographic agent handle registered with the Switch Room. | Set to any custom agent slug matching `^[a-z0-9][a-z0-9._-]*$`. |
+| `SWITCH_AGENT_REGISTRATION_TOKEN` | **Yes (Core Protocol)** | `secops-switch-token-2026` | Secret bootstrap token used by Kite to authenticate and auto-register with Switch Server. | Choose any 16+ char secret string, or copy from Switch Console Settings ➡️ API Keys. |
+| `SWITCH_SECRET_KEYS` | **Yes\*** | `k1:secops_master_...` | Master encryption and signing key for Switch Server state and token verification. | Format `<id>:<secret>`. Secret must be at least 32 characters long. (\*Required if running self-hosted Switch Gateway). |
+| `SWITCH_AGENT_API_KEY` | Optional | *None* | Pre-issued agent API key from Switch Gateway (auto-negotiated dynamically during handshake if blank). | Optional; if left blank, Kite auto-registers using `SWITCH_AGENT_REGISTRATION_TOKEN`. |
+| `SWITCH_ADMIN_EMAIL` | Optional | `admin@kite-secops.local` | Initial admin account email for the self-hosted Switch Gateway web dashboard. | Any valid email address you want to use for admin login. |
+| `SWITCH_ADMIN_PASS` | Optional | `SecOpsAdminPass2026!` | Admin password for the Switch Gateway web dashboard (port 3000). | Choose a strong password (minimum 8 characters). |
+
+#### D. Human Operational Interface (Discord Room Adapter)
+
+Kite provides a bi-directional bridge mapping Discord channels 1:1 to Switch Rooms. Human SOC engineers interact naturally in Discord `#cyberwar-ops`, which Kite transparently routes through the Switch Room state machine.
+
+| Variable | Required | Default | Why it exists (Purpose) | Where to get it (Source) |
+|:---|:---:|:---:|:---|:---|
+| `DISCORD_BOT_TOKEN` | **Yes (Human Interface)** | *None* | Bridges the Discord chat UI to the Switch Room so human operators can communicate directly with the agent squad. | [Discord Developer Portal](https://discord.com/developers/applications) ➡️ Select/Create App ➡️ **Bot** tab ➡️ Click **Reset Token** ➡️ Enable **Message Content Intent**. |
 | `DISCORD_APP_APPLICATION_ID` | No | *None* | Discord Application ID for slash commands and bot identity validation. | Discord Developer Portal ➡️ **General Information** tab ➡️ Application ID. |
 | `DISCORD_APP_CLIENT_SECRET` | No | *None* | Discord Client Secret for OAuth2 integrations. | Discord Developer Portal ➡️ **OAuth2** tab ➡️ Client Secret. |
-| `SWITCH_SERVER_URL` | No | `http://switch-server:8000` | Address of the Switch Core bridge server where room events and WebSocket streams originate. | In Docker, points to internal service `http://switch-server:8000`. If running locally, `http://localhost:8000`. |
-| `SWITCH_AGENT_REGISTRATION_TOKEN` | No | `secops-switch-token-2026` | Secret bootstrap token used by Kite to authenticate and auto-register with Switch Server. | Choose any 16+ char secret string, or copy from Switch Console Settings ➡️ API Keys. |
-| `SWITCH_AGENT_ID` | No | `kite-secops` | Unique identity handle for Kite in Switch Rooms. | Set to any custom agent slug matching `^[a-z0-9][a-z0-9._-]*$`. |
-| `SWITCH_AGENT_API_KEY` | No | *None* | Pre-issued agent API key from Switch Gateway (if manually provisioned). | Optional; if left blank, Kite auto-registers using `SWITCH_AGENT_REGISTRATION_TOKEN`. |
-| `SWITCH_ROOM_ID` | No | `cyberwar-ops` | The target Switch Room name / Discord channel where the squad collaborates. | Enter your Discord channel name (e.g. `cyberwar-ops` or `secops-war-room`). |
-| `SWITCH_ADMIN_EMAIL` | No | `admin@kite-secops.local` | Initial admin account email for the self-hosted Switch Gateway web dashboard. | Any valid email address you want to use for admin login. |
-| `SWITCH_ADMIN_PASS` | No | `SecOpsAdminPass2026!` | Admin password for the Switch Gateway web dashboard (port 3000). | Choose a strong password (minimum 8 characters). |
-| `SWITCH_SECRET_KEYS` | No | `k1:secops_master_...` | Master encryption and signing key for Switch Server state. | Format `<id>:<secret>`. Secret must be at least 32 characters long. |
 
-#### D. Target Application & Infrastructure (100% Generic & Configurable)
+#### E. Target Application & Infrastructure (100% Generic & Configurable)
 
 | Variable | Required | Default | Why it exists (Purpose) | Where to get it (Source) |
 |:---|:---:|:---:|:---|:---|
@@ -113,7 +125,7 @@ Every single environment variable in `.env` is explained below with its purpose,
 | `HOST_REPO_PATH` | **Yes** | `/path/to/target/repository` | Path on the host machine containing target source code (mounted into container for native Git & SAST analysis). | Absolute local path to target repository (e.g. `/home/ubuntu/mcp-gateway-k8s` or `D:/projects/my-app`). |
 | `K8S_NAMESPACE` | No | `default` | Kubernetes namespace inspected by `@recon-bot` and `kubectl` log forensics tools. | Kubernetes namespace of your target microservices (e.g. `gateway` or `default`). |
 
-#### E. Real GitHub GitOps Integration
+#### F. Real GitHub GitOps Integration
 
 | Variable | Required | Default | Why it exists (Purpose) | Where to get it (Source) |
 |:---|:---:|:---:|:---|:---|
@@ -123,7 +135,7 @@ Every single environment variable in `.env` is explained below with its purpose,
 
 *\* Note: GitHub credentials are only required if you want Kite to open live Pull Requests on GitHub. All other recon, scanning, and virtual shielding tools work without it.*
 
-#### F. Persistent Storage & Logging
+#### G. Persistent Storage & Logging
 
 | Variable | Required | Default | Why it exists (Purpose) | Where to get it (Source) |
 |:---|:---:|:---:|:---|:---|

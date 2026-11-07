@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     # 2. Launch Discord Bot listener in background asyncio task
     if settings.DISCORD_BOT_TOKEN:
         logger.info("Starting Discord bot runner...")
-        asyncio.create_task(start_discord_bot())
+        asyncio.create_task(start_discord_bot(switch_client=switch_client))
     
     yield
     logger.info("Shutting down Kite SecOps Gateway...")

@@ -13,6 +13,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 # Instantiate the single powerful Agent Engine
 agent_engine = KiteAgentEngine()
+switch_client_instance = None
+
+def set_switch_client(client):
+    global switch_client_instance
+    switch_client_instance = client
 
 @bot.event
 async def on_ready():
@@ -40,12 +45,22 @@ async def on_message(message: discord.Message):
         logger.warning(f"Could not fetch room history: {e}")
         room_history = [f"{message.author.name}: {content}"]
 
-    # 2. Let the Agent Engine process the turn with OpenAI Function Calling
+    # 2. Sync room history to Switch Room client state
+    if switch_client_instance:
+        switch_client_instance.room_history = list(room_history)
+
+    # 3. Let the Agent Engine process the turn with OpenAI Function Calling
     async with message.channel.typing():
         response_text = await agent_engine.process_chat_turn(
             user_message=content,
             room_history=room_history
         )
+
+        # Sync agent response into Switch Room state & forward if connected
+        if switch_client_instance:
+            switch_client_instance.room_history.append(f"Kite-Agent: {response_text}")
+            if switch_client_instance.is_connected:
+                asyncio.create_task(switch_client_instance.send_room_message(switch_client_instance.room_id, response_text))
 
         # Discord message limit is 2000 chars, split if necessary
         if len(response_text) > 1950:
@@ -54,7 +69,9 @@ async def on_message(message: discord.Message):
         else:
             await message.channel.send(response_text)
 
-async def start_discord_bot():
+async def start_discord_bot(switch_client=None):
+    if switch_client:
+        set_switch_client(switch_client)
     token = settings.DISCORD_BOT_TOKEN
     if not token or token == "your_discord_bot_token_here":
         logger.warning("DISCORD_BOT_TOKEN not provided in .env. Discord listener standing by.")
