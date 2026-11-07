@@ -78,7 +78,10 @@ class SwitchAgentProtocolClient:
             "connector_type": "websocket",
             "integration_profile": {
                 "connection_model": "always_on",
-                "message_exchange": True
+                "message_exchange": True,
+                "pre_invocation_mediation": False,
+                "post_invocation_mediation": False,
+                "event_reporting": False
             },
             "overwrite": True
         }
@@ -231,7 +234,18 @@ class SwitchAgentProtocolClient:
                     continue
 
                 logger.info(f"Connecting to Switch Room WebSocket: {ws_url}")
-                async with websockets.connect(ws_url, extra_headers=headers) as ws:
+                ws_kwargs = {}
+                try:
+                    import inspect
+                    sig = inspect.signature(websockets.connect)
+                    if "additional_headers" in sig.parameters:
+                        ws_kwargs["additional_headers"] = headers
+                    else:
+                        ws_kwargs["extra_headers"] = headers
+                except Exception:
+                    ws_kwargs["additional_headers"] = headers
+
+                async with websockets.connect(ws_url, **ws_kwargs) as ws:
                     self.is_connected = True
                     logger.info(f"Successfully joined Switch Room [{self.room_id}] as @{self.agent_id}!")
 

@@ -26,12 +26,10 @@ async def lifespan(app: FastAPI):
     # 1. Launch Switch Agent Protocol client (WebSocket to Switch Rooms)
     switch_client.start_background_task()
 
-    # 2. Launch Discord Bot listener in background asyncio task if direct fallback is enabled
-    if settings.ENABLE_DIRECT_DISCORD_FALLBACK:
-        logger.info("Direct Discord bot fallback is ENABLED. Starting direct discord runner...")
+    # 2. Launch Discord Bot listener in background asyncio task
+    if settings.DISCORD_BOT_TOKEN:
+        logger.info("Starting Discord bot runner...")
         asyncio.create_task(start_discord_bot())
-    else:
-        logger.info("Direct Discord bot is in STANDBY (Official Switch Rooms Bridge is primary).")
     
     yield
     logger.info("Shutting down Kite SecOps Gateway...")
