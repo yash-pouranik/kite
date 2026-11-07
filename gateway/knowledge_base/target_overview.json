@@ -1,13 +1,35 @@
 {
-  "target_name": "Target Application",
-  "base_url": "https://example.com",
-  "business_domain": "Cloud Application Services",
-  "technology_stack": {},
+  "target_name": "Vynn AI / Urbackend Gateway",
+  "base_url": "https://vynn.urbackend.in",
+  "business_domain": "MCP Gateway & AI Workflow Infrastructure",
+  "technology_stack": {
+    "server": "Nginx / Cloud",
+    "x_powered_by": "Unknown",
+    "strict_transport_security": true,
+    "bundles_found": 1,
+    "api_spec": "/api/health"
+  },
+  "endpoints": [
+    "/api-docs",
+    "/api/auth/api-keys",
+    "/api/auth/login",
+    "/api/auth/me",
+    "/api/chat",
+    "/api/chat/providers",
+    "/api/chat/usage",
+    "/api/health",
+    "/api/members",
+    "/api/oauth/clients",
+    "/api/servers",
+    "/health",
+    "/openapi.json",
+    "/swagger.json"
+  ],
   "metadata": {
-    "last_scanned_at": null,
-    "last_updated_by": null,
-    "discovery_method": "uninitialized",
-    "knowledge_completeness_percentage": 0,
-    "confidence_score": 0.0
+    "last_scanned_at": "2026-11-07T08:00:53.793507+00:00",
+    "last_updated_by": "recon-bot",
+    "discovery_method": "live_web_bundle_crawler",
+    "knowledge_completeness_percentage": 100,
+    "confidence_score": 1.0
   }
 }

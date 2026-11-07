@@ -300,5 +300,41 @@ class TestSecOpsTools(unittest.TestCase):
         _run_git_cmd(["checkout", base_branch])
         _run_git_cmd(["branch", "-D", test_branch])
 
+    def test_12_k8s_kubeconfig_adaptation(self):
+        """Verifies that k8s_ops automatically adapts localhost kubeconfigs for containers."""
+        import tempfile
+        from tools.k8s_ops import _resolve_kubeconfig, _detect_host_ip
+
+        # Create dummy loopback kubeconfig
+        with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
+            f.write("""apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: dGVzdC1jYQ==
+    server: https://127.0.0.1:6443
+  name: default
+""")
+            dummy_path = f.name
+
+        try:
+            old_kc = os.environ.get("KUBECONFIG")
+            os.environ["KUBECONFIG"] = dummy_path
+            adapted = _resolve_kubeconfig()
+            self.assertIsNotNone(adapted)
+            self.assertNotEqual(adapted, dummy_path)
+
+            with open(adapted, "r") as f:
+                content = f.read()
+            self.assertNotIn("127.0.0.1:6443", content)
+            self.assertIn(":6443", content)
+            self.assertIn("insecure-skip-tls-verify: true", content)
+        finally:
+            if old_kc:
+                os.environ["KUBECONFIG"] = old_kc
+            else:
+                os.environ.pop("KUBECONFIG", None)
+            if os.path.exists(dummy_path):
+                os.remove(dummy_path)
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,11 +1,307 @@
 {
-  "total_endpoints_discovered": 0,
-  "endpoints": [],
+  "status": "success",
+  "target": "https://vynn.urbackend.in",
+  "technology_stack": {
+    "server": "Nginx / Cloud",
+    "x_powered_by": "Unknown",
+    "strict_transport_security": true,
+    "bundles_found": 1,
+    "api_spec": "/api/health"
+  },
+  "total_discovered": 14,
+  "endpoints": [
+    "/api-docs",
+    "/api/auth/api-keys",
+    "/api/auth/login",
+    "/api/auth/me",
+    "/api/chat",
+    "/api/chat/providers",
+    "/api/chat/usage",
+    "/api/health",
+    "/api/members",
+    "/api/oauth/clients",
+    "/api/servers",
+    "/health",
+    "/openapi.json",
+    "/swagger.json"
+  ],
+  "verified_endpoints": [
+    {
+      "path": "/api-docs",
+      "url": "https://vynn.urbackend.in/api-docs",
+      "category": "api",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 200,
+        "POST": 405
+      }
+    },
+    {
+      "path": "/api/auth/api-keys",
+      "url": "https://vynn.urbackend.in/api/auth/api-keys",
+      "category": "auth",
+      "is_live": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 401
+      }
+    },
+    {
+      "path": "/api/auth/login",
+      "url": "https://vynn.urbackend.in/api/auth/login",
+      "category": "auth",
+      "is_live": true,
+      "methods": [
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 404,
+        "POST": 400
+      }
+    },
+    {
+      "path": "/api/auth/me",
+      "url": "https://vynn.urbackend.in/api/auth/me",
+      "category": "auth",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 404
+      }
+    },
+    {
+      "path": "/api/chat",
+      "url": "https://vynn.urbackend.in/api/chat",
+      "category": "api",
+      "is_live": true,
+      "methods": [
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 404,
+        "POST": 401
+      }
+    },
+    {
+      "path": "/api/chat/providers",
+      "url": "https://vynn.urbackend.in/api/chat/providers",
+      "category": "api",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 404
+      }
+    },
+    {
+      "path": "/api/chat/usage",
+      "url": "https://vynn.urbackend.in/api/chat/usage",
+      "category": "api",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 404
+      }
+    },
+    {
+      "path": "/api/health",
+      "url": "https://vynn.urbackend.in/api/health",
+      "category": "health",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 200,
+        "POST": 404
+      }
+    },
+    {
+      "path": "/api/members",
+      "url": "https://vynn.urbackend.in/api/members",
+      "category": "api",
+      "is_live": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 401
+      }
+    },
+    {
+      "path": "/api/oauth/clients",
+      "url": "https://vynn.urbackend.in/api/oauth/clients",
+      "category": "auth",
+      "is_live": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 401
+      }
+    },
+    {
+      "path": "/api/servers",
+      "url": "https://vynn.urbackend.in/api/servers",
+      "category": "api",
+      "is_live": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 401
+      }
+    },
+    {
+      "path": "/health",
+      "url": "https://vynn.urbackend.in/health",
+      "category": "health",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 200,
+        "POST": 405
+      }
+    },
+    {
+      "path": "/openapi.json",
+      "url": "https://vynn.urbackend.in/openapi.json",
+      "category": "api",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 200,
+        "POST": 405
+      }
+    },
+    {
+      "path": "/swagger.json",
+      "url": "https://vynn.urbackend.in/swagger.json",
+      "category": "api",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 200,
+        "POST": 405
+      }
+    }
+  ],
+  "auth_endpoints": [
+    {
+      "path": "/api/auth/api-keys",
+      "url": "https://vynn.urbackend.in/api/auth/api-keys",
+      "category": "auth",
+      "is_live": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 401
+      }
+    },
+    {
+      "path": "/api/auth/login",
+      "url": "https://vynn.urbackend.in/api/auth/login",
+      "category": "auth",
+      "is_live": true,
+      "methods": [
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 404,
+        "POST": 400
+      }
+    },
+    {
+      "path": "/api/auth/me",
+      "url": "https://vynn.urbackend.in/api/auth/me",
+      "category": "auth",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 404
+      }
+    },
+    {
+      "path": "/api/oauth/clients",
+      "url": "https://vynn.urbackend.in/api/oauth/clients",
+      "category": "auth",
+      "is_live": true,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "status_codes": {
+        "GET": 401,
+        "POST": 401
+      }
+    }
+  ],
+  "health_endpoints": [
+    {
+      "path": "/api/health",
+      "url": "https://vynn.urbackend.in/api/health",
+      "category": "health",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 200,
+        "POST": 404
+      }
+    },
+    {
+      "path": "/health",
+      "url": "https://vynn.urbackend.in/health",
+      "category": "health",
+      "is_live": true,
+      "methods": [
+        "GET"
+      ],
+      "status_codes": {
+        "GET": 200,
+        "POST": 405
+      }
+    }
+  ],
   "metadata": {
-    "last_scanned_at": null,
-    "last_updated_by": null,
-    "discovery_method": "uninitialized",
-    "knowledge_completeness_percentage": 0,
-    "confidence_score": 0.0
+    "last_scanned_at": "2026-11-07T08:00:53.789484+00:00",
+    "last_updated_by": "recon-bot",
+    "discovery_method": "web_bundle_crawler",
+    "knowledge_completeness_percentage": 100,
+    "confidence_score": 1.0
   }
 }

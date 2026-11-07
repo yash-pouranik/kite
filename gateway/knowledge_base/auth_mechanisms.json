@@ -1,11 +1,29 @@
 {
-  "authentication_type": null,
-  "endpoints": {},
+  "authentication_type": "JWT / Bearer Token or Cookie Session",
+  "endpoints": {
+    "login": {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "payload_fields": [
+        "email",
+        "password"
+      ],
+      "token_location": "Authorization: Bearer <token>",
+      "status": 400,
+      "verified_live": true
+    }
+  },
+  "discovered_auth_routes": [
+    "/api/auth/api-keys",
+    "/api/auth/login",
+    "/api/auth/me",
+    "/api/oauth/clients"
+  ],
   "metadata": {
-    "last_scanned_at": null,
-    "last_updated_by": null,
-    "discovery_method": "uninitialized",
-    "knowledge_completeness_percentage": 0,
-    "confidence_score": 0.0
+    "last_scanned_at": "2026-11-07T08:00:53.791496+00:00",
+    "last_updated_by": "recon-bot",
+    "discovery_method": "web_bundle_crawler_live_probed",
+    "knowledge_completeness_percentage": 80,
+    "confidence_score": 0.8
   }
 }

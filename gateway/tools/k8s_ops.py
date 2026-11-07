@@ -1,6 +1,9 @@
 import json
 import os
+import re
+import socket
 import subprocess
+import tempfile
 import logging
 from typing import Dict, Any, Optional, List
 
@@ -13,15 +16,84 @@ KUBECONFIG_CANDIDATES = [
     "/etc/kubernetes/admin.conf"
 ]
 
+def _detect_host_ip() -> str:
+    """Resolves host IP reachable from inside the container."""
+    # 1. Try host.docker.internal
+    try:
+        socket.gethostbyname("host.docker.internal")
+        return "host.docker.internal"
+    except Exception:
+        pass
+
+    # 2. Extract default gateway from /proc/net/route in Linux Docker
+    try:
+        if os.path.exists("/proc/net/route"):
+            with open("/proc/net/route", "r") as f:
+                for line in f:
+                    fields = line.strip().split()
+                    if len(fields) >= 3 and fields[1] == "00000000":
+                        gw_hex = fields[2]
+                        gw_ip = ".".join(str(int(gw_hex[i:i+2], 16)) for i in (6, 4, 2, 0))
+                        if gw_ip and gw_ip != "0.0.0.0":
+                            return gw_ip
+    except Exception:
+        pass
+
+    return "172.17.0.1"
+
 def _resolve_kubeconfig() -> Optional[str]:
-    """Finds available kubeconfig file across mounted paths."""
+    """
+    Finds available kubeconfig file across mounted paths.
+    If the kubeconfig points to 127.0.0.1 or localhost (common when mounted from
+    an EC2 host into a Docker container), adapts it so requests route to the host gateway
+    with insecure-skip-tls-verify enabled to avoid cert SAN mismatch.
+    """
     env_kc = os.getenv("KUBECONFIG")
+    candidate_path = None
     if env_kc and os.path.exists(env_kc):
-        return env_kc
-    for cand in KUBECONFIG_CANDIDATES:
-        if os.path.exists(cand):
-            return cand
-    return None
+        candidate_path = env_kc
+    else:
+        for cand in KUBECONFIG_CANDIDATES:
+            if os.path.exists(cand):
+                candidate_path = cand
+                break
+
+    if not candidate_path:
+        return None
+
+    # Adapt loopback host to container-reachable host IP
+    try:
+        with open(candidate_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        if "127.0.0.1:6443" in content or "localhost:6443" in content:
+            host_ip = _detect_host_ip()
+            adapted = re.sub(
+                r'https?://(127\.0\.0\.1|localhost):6443',
+                f'https://{host_ip}:6443',
+                content
+            )
+            if "certificate-authority-data:" in adapted:
+                adapted = re.sub(
+                    r'certificate-authority-data:\s*[\S]+',
+                    'insecure-skip-tls-verify: true',
+                    adapted
+                )
+            elif "insecure-skip-tls-verify:" not in adapted:
+                adapted = re.sub(
+                    r'(server:\s*https://[^\n]+)',
+                    r'\1\n    insecure-skip-tls-verify: true',
+                    adapted
+                )
+
+            adapted_path = os.path.join(tempfile.gettempdir(), "adapted_kubeconfig.yaml")
+            with open(adapted_path, "w", encoding="utf-8") as f:
+                f.write(adapted)
+            return adapted_path
+    except Exception as e:
+        logger.warning(f"Could not adapt kubeconfig: {e}")
+
+    return candidate_path
 
 def _run_kubectl(args: List[str]) -> Dict[str, Any]:
     """Safely executes kubectl CLI command with resolved kubeconfig."""

@@ -34,6 +34,8 @@ services:
       # Kubernetes cluster credentials mount (read-only for kubectl pod forensics)
       - ${HOST_KUBE_DIR:-~/.kube}:/root/.kube:ro
       - /etc/rancher/k3s:/etc/rancher/k3s:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - redis
       - postgres
