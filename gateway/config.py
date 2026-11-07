@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     SWITCH_AGENT_ID: str = os.getenv("SWITCH_AGENT_ID", "kite-secops")
     SWITCH_AGENT_API_KEY: str = os.getenv("SWITCH_AGENT_API_KEY", "")
     SWITCH_ROOM_ID: str = os.getenv("SWITCH_ROOM_ID", "cyberwar-ops")
-    ENABLE_DIRECT_DISCORD_FALLBACK: bool = os.getenv("ENABLE_DIRECT_DISCORD_FALLBACK", "false").lower() in ("true", "1", "yes")
+    ENABLE_DIRECT_DISCORD_FALLBACK: bool = os.getenv("ENABLE_DIRECT_DISCORD_FALLBACK", "true").lower() in ("true", "1", "yes")
 
     # Pinned Models
     RECON_MODEL: str = os.getenv("RECON_MODEL", "gemini-3.1-flash-lite")
