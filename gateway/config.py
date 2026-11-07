@@ -23,7 +23,9 @@ class Settings(BaseSettings):
     # API Keys & Tokens from .env
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     GOOGLE_AI_API_KEY: str = os.getenv("GOOGLE_AI_API_KEY", "")
-    DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN", "")
+    DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN") or os.getenv("DISCORD_APP_BOT_TOKEN", "")
+    DISCORD_APP_APPLICATION_ID: str = os.getenv("DISCORD_APP_APPLICATION_ID", "")
+    DISCORD_APP_CLIENT_SECRET: str = os.getenv("DISCORD_APP_CLIENT_SECRET", "")
     
     # Target Application & Infrastructure (100% Configurable from .env)
     TARGET_HOST: str = os.getenv("TARGET_HOST", "target-app")
