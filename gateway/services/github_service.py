@@ -7,6 +7,7 @@ import logging
 from typing import Dict, Any, Optional
 from config import settings
 from tools.git_ops import get_git_remote_info
+from services.approval_guard import approval_guard
 
 logger = logging.getLogger("cyberwar.services.github")
 
@@ -50,11 +51,13 @@ class GitHubGitOpsService:
         target_repo: Optional[str] = None,
         base_branch: Optional[str] = None,
         file_path: Optional[str] = None,
-        file_content: Optional[str] = None
+        file_content: Optional[str] = None,
+        plan_hash: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Opens an actual GitHub Pull Request.
         Creates branch on remote if needed, commits file if provided, and opens PR.
+        Enforces Tool-Layer Four-Eyes Gate: Rejects execution if plan_hash is missing or unapproved.
         Never returns fake or mock URLs.
         """
         token, owner, repo = self._get_credentials(target_repo)
@@ -69,6 +72,22 @@ class GitHubGitOpsService:
             return {
                 "status": "error",
                 "error": "Could not determine target repository owner or repo name. Please specify 'target_repo' as 'owner/repo'."
+            }
+
+        # Hard Tool-Layer Gate for Real GitHub PR
+        authorized, auth_msg = approval_guard.verify_and_consume(
+            action_type="create_github_pr",
+            target=f"{owner}/{repo}",
+            details={"title": title},
+            plan_hash=plan_hash
+        )
+        if not authorized:
+            return {
+                "status": "blocked",
+                "error": auth_msg,
+                "requires_approval": True,
+                "action": "create_github_pr",
+                "target_repo": f"{owner}/{repo}"
             }
 
         headers = {

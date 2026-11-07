@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     DISCORD_APP_CLIENT_SECRET: str = os.getenv("DISCORD_APP_CLIENT_SECRET", "")
     
     # Target Application & Infrastructure (100% Configurable from .env)
-    TARGET_HOST: str = os.getenv("TARGET_HOST", "target-app")
+    TARGET_HOST: str = os.getenv("TARGET_HOST", "vynn.urbackend.in")
     TARGET_CONTAINER_NAME: str = os.getenv("TARGET_CONTAINER_NAME", os.getenv("TARGET_HOST", "target-app"))
     HOST_REPO_PATH: str = os.getenv("HOST_REPO_PATH", "/app/target_repo")
     K8S_NAMESPACE: str = os.getenv("K8S_NAMESPACE", "default")

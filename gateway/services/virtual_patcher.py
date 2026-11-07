@@ -1,8 +1,9 @@
 import os
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from config import settings
+from services.approval_guard import approval_guard
 
 logger = logging.getLogger("cyberwar.services.virtual_patcher")
 
@@ -10,6 +11,7 @@ class NginxVirtualPatcher:
     """
     Manages zero-downtime virtual patching and 1-click rollback on Nginx reverse proxy.
     Injects tailored regex inspection rules into /etc/nginx/conf.d/ and triggers hot reloads in 5ms.
+    Enforces the Four-Eyes Principle: cannot apply shields without valid human approval token.
     """
     def __init__(self, patch_dir: str = settings.NGINX_PATCH_DIR):
         self.patch_dir = patch_dir
@@ -41,10 +43,32 @@ location = {endpoint} {{
 """
         return config_content
 
-    async def apply_virtual_patch(self, endpoint: str = "/api/auth/login", patch_filename: str = "patch_kite_shield.conf") -> Dict[str, Any]:
+    async def apply_virtual_patch(
+        self,
+        endpoint: str = "/api/auth/login",
+        patch_filename: str = "patch_kite_shield.conf",
+        plan_hash: Optional[str] = None
+    ) -> Dict[str, Any]:
         """
         Writes the patch configuration file and signals Nginx to perform a zero-downtime hot reload.
+        Enforces Tool-Layer Four-Eyes Gate: Rejects execution if plan_hash is missing or unapproved.
         """
+        # Hard Tool-Layer Gate
+        authorized, auth_msg = approval_guard.verify_and_consume(
+            action_type="apply_virtual_shield",
+            target=endpoint,
+            details={"patch_filename": patch_filename},
+            plan_hash=plan_hash
+        )
+        if not authorized:
+            return {
+                "status": "blocked",
+                "error": auth_msg,
+                "requires_approval": True,
+                "action": "apply_virtual_shield",
+                "endpoint": endpoint
+            }
+
         filepath = os.path.join(self.patch_dir, patch_filename)
         content = self.generate_sqli_virtual_patch_config(endpoint=endpoint)
         

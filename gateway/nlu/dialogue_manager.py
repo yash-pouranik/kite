@@ -1,7 +1,10 @@
 import json
 import logging
 from typing import Dict, Any, Optional
-from google import genai
+try:
+    from google import genai
+except ImportError:
+    genai = None
 from config import settings
 
 logger = logging.getLogger("cyberwar.nlu.dialogue")
@@ -17,7 +20,7 @@ class ConversationalDialogueManager:
     def __init__(self):
         self.api_key = settings.GOOGLE_AI_API_KEY
         self.model_name = settings.RECON_MODEL # gemini-3.1-flash-lite
-        self.client = genai.Client(api_key=self.api_key) if self.api_key else None
+        self.client = genai.Client(api_key=self.api_key) if (genai and self.api_key) else None
         self.default_target = settings.TARGET_HOST or "target-app"
         self.session_memory: Dict[str, Any] = {
             "last_target": self.default_target,
@@ -52,8 +55,29 @@ class ConversationalDialogueManager:
         elif self.session_memory.get("last_target"):
             target = self.session_memory["last_target"]
 
-        # Confirmations
-        if any(w in msg_lower for w in ["yes", "proceed", "go ahead", "approve", "sounds solid", "apply", "haan", "karo", "verify"]):
+        # 1. Refusals & Negative Qualifiers (MUST precede confirmation checks)
+        # Prevents adversarial bypass like "don't deploy", "approve nahi hai", "why deploy?", "stop and wait"
+        direct_halts = ["stop", "wait", "hold", "cancel", "pause", "halt"]
+        negative_qualifiers = ["don't", "dont", "do not", "nahi", "not", "why", "kya", "never", "reject", "refuse"]
+
+        has_direct_halt = any(h in msg_lower for h in direct_halts)
+        has_negative = any(neg in msg_lower for neg in negative_qualifiers)
+
+        if has_direct_halt or has_negative:
+            action_triggers = ["deploy", "apply", "approve", "proceed", "fix", "patch", "karo", "execution", "action"]
+            if has_direct_halt or any(act in msg_lower for act in action_triggers):
+                return {
+                    "intent": "REFUSE_ACTION",
+                    "is_ambiguous": False,
+                    "clarification_prompt": "Action halted. Negative qualifier or refusal detected from human lead. Execution cancelled pending clarification.",
+                    "extracted_target": target,
+                    "focus_area": focus_area
+                }
+
+        # 2. Positive Confirmations (Only evaluated when NO negative qualifiers exist)
+        confirm_tokens = ["yes", "proceed", "go ahead", "approve", "approved", "sounds solid", "haan", "karo", "confirm"]
+        tokens = [t.strip(",.!?") for t in msg_lower.split()]
+        if any(w in tokens or f" {w} " in f" {msg_lower} " for w in confirm_tokens):
             return {
                 "intent": "CONFIRM_ACTION",
                 "is_ambiguous": False,

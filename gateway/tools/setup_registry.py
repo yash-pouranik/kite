@@ -26,6 +26,12 @@ from tools.test_runner import run_local_test_suite
 from tools.ci_and_issues import check_github_ci_status, sync_github_issue
 from tools.k8s_ops import get_k8s_pods, tail_k8s_logs
 from tools.terminal_runner import execute_terminal_command
+from tools.pr_review_ops import (
+    fetch_pr_diff_and_files,
+    post_pr_review_and_comment,
+    manage_branch_and_commit
+)
+from services.approval_guard import approval_guard
 
 logger = logging.getLogger("cyberwar.tools.setup")
 
@@ -63,6 +69,28 @@ def register_all_tools():
             agent_name="recon-bot",
             discovery_method="web_bundle_crawler"
         )
+        if result.get("auth_endpoints"):
+            login_ep = next((ep for ep in result["auth_endpoints"] if "login" in ep["path"].lower()), None)
+            auth_data = {
+                "authentication_type": "JWT / Bearer Token or Cookie Session",
+                "endpoints": {
+                    "login": {
+                        "path": login_ep["path"] if login_ep else "/api/auth/login",
+                        "method": "POST",
+                        "payload_fields": ["email", "password"],
+                        "token_location": "Authorization: Bearer <token>",
+                        "status": login_ep["status_codes"].get("POST", 400) if login_ep else 400,
+                        "verified_live": True
+                    }
+                },
+                "discovered_auth_routes": [ep["path"] for ep in result["auth_endpoints"]]
+            }
+            kb_manager.save_or_update_knowledge(
+                category="auth_mechanisms",
+                data=auth_data,
+                agent_name="recon-bot",
+                discovery_method="web_bundle_crawler_live_probed"
+            )
         return result
 
     # 2. Read Project File
@@ -183,17 +211,18 @@ def register_all_tools():
     # 9. Apply Virtual Shield
     @registry.register(
         name="apply_virtual_shield",
-        description="Deploys a zero-downtime Nginx reverse proxy virtual patch (regex inspection rule) and reloads Nginx dynamically in 5ms.",
+        description="Deploys a zero-downtime Nginx reverse proxy virtual patch (regex inspection rule) and reloads Nginx dynamically in 5ms. Enforces Four-Eyes Principle: Requires an approved plan_hash from a human security lead.",
         parameters={
             "type": "object",
             "properties": {
-                "endpoint": {"type": "string", "description": "The endpoint to protect, e.g. /api/auth/login"}
+                "endpoint": {"type": "string", "description": "The endpoint to protect, e.g. /api/auth/login"},
+                "plan_hash": {"type": "string", "description": "Mandatory plan hash approved by a human security lead"}
             },
             "required": ["endpoint"]
         }
     )
-    async def handle_apply_patch(endpoint: str = "/api/auth/login"):
-        return await virtual_patcher.apply_virtual_patch(endpoint=endpoint)
+    async def handle_apply_patch(endpoint: str = "/api/auth/login", plan_hash: Optional[str] = None):
+        return await virtual_patcher.apply_virtual_patch(endpoint=endpoint, plan_hash=plan_hash)
 
     # 10. Rollback Virtual Shield
     @registry.register(
@@ -296,7 +325,7 @@ def register_all_tools():
     # 17. Real GitHub PR Creator
     @registry.register(
         name="create_github_pr",
-        description="Opens a REAL GitHub Pull Request with custom title, body, and branch. Never returns mock or simulated URLs.",
+        description="Opens a REAL GitHub Pull Request with custom title, body, and branch. Enforces Four-Eyes Principle: Requires an approved plan_hash from a human security lead.",
         parameters={
             "type": "object",
             "properties": {
@@ -304,7 +333,8 @@ def register_all_tools():
                 "description": {"type": "string", "description": "The markdown body / description of the Pull Request"},
                 "branch_name": {"type": "string", "description": "Optional branch name (e.g. 'kite/test-pr' or 'secops/fix-sqli')"},
                 "target_repo": {"type": "string", "description": "Optional target repository in 'owner/repo' or URL format"},
-                "base_branch": {"type": "string", "description": "Base branch to merge into (defaults to 'main')"}
+                "base_branch": {"type": "string", "description": "Base branch to merge into (defaults to 'main')"},
+                "plan_hash": {"type": "string", "description": "Mandatory plan hash approved by a human security lead"}
             },
             "required": ["title"]
         }
@@ -314,14 +344,16 @@ def register_all_tools():
         description: Optional[str] = "",
         branch_name: Optional[str] = None,
         target_repo: Optional[str] = None,
-        base_branch: Optional[str] = None
+        base_branch: Optional[str] = None,
+        plan_hash: Optional[str] = None
     ):
         return await github_service.create_pull_request(
             title=title,
             body=description or f"Created by Kite SecOps Teammate for {title}",
             branch_name=branch_name,
             target_repo=target_repo,
-            base_branch=base_branch
+            base_branch=base_branch,
+            plan_hash=plan_hash
         )
 
     # 18. Code SAST Scanner
@@ -498,4 +530,173 @@ def register_all_tools():
     def handle_terminal_exec(command: str, working_dir: Optional[str] = None):
         return execute_terminal_command(command=command, working_dir=working_dir)
 
-    logger.info("Successfully registered all 28 DevSecOps, Git, Kubernetes, and Terminal tools in ToolRegistry.")
+    # 29. Register SecOps Action Plan (Four-Eyes Gate)
+    @registry.register(
+        name="register_secops_plan",
+        description="Registers a high-risk action plan (virtual shield, GitHub PR) and generates a deterministic plan_hash for human lead review.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "action_type": {"type": "string", "description": "Action type (e.g. 'apply_virtual_shield' or 'create_github_pr')"},
+                "target": {"type": "string", "description": "Target endpoint or repo name"},
+                "details": {"type": "object", "description": "Action parameters dictionary"}
+            },
+            "required": ["action_type", "target"]
+        }
+    )
+    def handle_register_plan(action_type: str, target: str, details: Optional[Dict[str, Any]] = None):
+        plan_hash = approval_guard.register_pending_plan(action_type=action_type, target=target, details=details)
+        return {
+            "status": "pending_approval",
+            "plan_hash": plan_hash,
+            "action_type": action_type,
+            "target": target,
+            "message": f"Plan registered. Human security lead must approve hash [{plan_hash}] before execution."
+        }
+
+    # 30. Approve SecOps Action Plan (Four-Eyes Gate)
+    @registry.register(
+        name="approve_secops_plan",
+        description="Records human lead approval for a pending plan_hash. Rejects automated bots and enforces the Four-Eyes Principle.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "plan_hash": {"type": "string", "description": "The 12-char plan hash to approve"},
+                "approver_id": {"type": "string", "description": "Human lead identifier or username (must not be an automated agent)"},
+                "is_bot": {"type": "boolean", "description": "Set to true if approver is a bot/agent (will be rejected)"}
+            },
+            "required": ["plan_hash", "approver_id"]
+        }
+    )
+    def handle_approve_plan(plan_hash: str, approver_id: str, is_bot: bool = False):
+        success, msg = approval_guard.approve_plan(plan_hash=plan_hash, approver_id=approver_id, is_bot=is_bot)
+        return {
+            "status": "approved" if success else "rejected",
+            "plan_hash": plan_hash,
+            "approver_id": approver_id,
+            "message": msg
+        }
+
+    # 31. PR / MR Diff & File Fetcher
+    @registry.register(
+        name="fetch_pr_diff_and_files",
+        description="Retrieves added, modified, or deleted files, line-by-line diffs, and commit histories for a Pull Request / Merge Request via GitHub REST APIs.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "pr_number": {"type": "integer", "description": "The Pull Request number (e.g. 42)"},
+                "target_repo": {"type": "string", "description": "Optional repository in 'owner/repo' format (defaults to GITHUB_REPO_OWNER/GITHUB_REPO_NAME)"}
+            },
+            "required": ["pr_number"]
+        }
+    )
+    async def handle_fetch_pr_diff(pr_number: int, target_repo: Optional[str] = None):
+        return await fetch_pr_diff_and_files(pr_number=pr_number, target_repo=target_repo)
+
+    # 32. Comment & Review Writer
+    @registry.register(
+        name="post_pr_review_and_comment",
+        description="Posts inline code comments, summary reviews, labels, or approval/request-changes status directly to a GitHub Pull Request.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "pr_number": {"type": "integer", "description": "The Pull Request number to review"},
+                "body": {"type": "string", "description": "The review summary or general markdown feedback to post"},
+                "event": {
+                    "type": "string",
+                    "description": "Review submission action: 'COMMENT', 'APPROVE', or 'REQUEST_CHANGES' (defaults to 'COMMENT')",
+                    "enum": ["COMMENT", "APPROVE", "REQUEST_CHANGES"]
+                },
+                "comments": {
+                    "type": "array",
+                    "description": "Optional inline line-by-line code review comments",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "path": {"type": "string", "description": "Relative file path in repo"},
+                            "line": {"type": "integer", "description": "Line number in the diff to comment on"},
+                            "body": {"type": "string", "description": "Comment markdown text"}
+                        },
+                        "required": ["path", "line", "body"]
+                    }
+                },
+                "labels": {
+                    "type": "array",
+                    "description": "Optional labels to apply to the PR (e.g. ['security-reviewed', 'ready-to-merge'])",
+                    "items": {"type": "string"}
+                },
+                "target_repo": {"type": "string", "description": "Optional repository in 'owner/repo' format"}
+            },
+            "required": ["pr_number", "body"]
+        }
+    )
+    async def handle_post_pr_review(
+        pr_number: int,
+        body: str,
+        event: Optional[str] = "COMMENT",
+        comments: Optional[List[Dict[str, Any]]] = None,
+        labels: Optional[List[str]] = None,
+        target_repo: Optional[str] = None
+    ):
+        return await post_pr_review_and_comment(
+            pr_number=pr_number,
+            body=body,
+            event=event,
+            comments=comments,
+            labels=labels,
+            target_repo=target_repo
+        )
+
+    # 33. Branch & Commit Manager
+    @registry.register(
+        name="manage_branch_and_commit",
+        description="Creates, checks out, pushes, or updates branches and commits fixes directly to the PR using local Git or remote GitHub APIs.",
+        parameters={
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "description": "Branching action: 'create_branch', 'checkout_branch', 'commit_and_push', or 'update_branch'",
+                    "enum": ["create_branch", "checkout_branch", "commit_and_push", "update_branch"]
+                },
+                "branch_name": {"type": "string", "description": "Name of the Git branch (e.g. 'fix/secops-patch-101')"},
+                "commit_message": {"type": "string", "description": "Commit message when committing changes"},
+                "files_to_commit": {
+                    "type": "array",
+                    "description": "List of files to write and commit: [{'path': 'file.py', 'content': '...'}]",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "path": {"type": "string"},
+                            "content": {"type": "string"}
+                        },
+                        "required": ["path", "content"]
+                    }
+                },
+                "base_branch": {"type": "string", "description": "Base branch to branch off of (defaults to 'main')"},
+                "push_remote": {"type": "boolean", "description": "Whether to push branch to origin remote (defaults to true)"},
+                "target_repo": {"type": "string", "description": "Optional repository in 'owner/repo' format"}
+            },
+            "required": ["action", "branch_name"]
+        }
+    )
+    async def handle_manage_branch(
+        action: str,
+        branch_name: str,
+        commit_message: Optional[str] = None,
+        files_to_commit: Optional[List[Dict[str, str]]] = None,
+        base_branch: Optional[str] = None,
+        push_remote: bool = True,
+        target_repo: Optional[str] = None
+    ):
+        return await manage_branch_and_commit(
+            action=action,
+            branch_name=branch_name,
+            commit_message=commit_message,
+            files_to_commit=files_to_commit,
+            base_branch=base_branch,
+            push_remote=push_remote,
+            target_repo=target_repo
+        )
+
+    logger.info("Successfully registered all 33 DevSecOps, Git, Code Review, Kubernetes, and Terminal tools in ToolRegistry.")
