@@ -87,7 +87,7 @@ class KiteAgentEngine:
         tools = self.get_tool_definitions()
 
         try:
-            max_tool_iterations = 5
+            max_tool_iterations = getattr(settings, "MAX_TOOL_ITERATIONS", 10)
             iteration = 0
 
             while iteration < max_tool_iterations:

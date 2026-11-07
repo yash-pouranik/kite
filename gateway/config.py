@@ -48,11 +48,12 @@ class Settings(BaseSettings):
     SWITCH_ROOM_ID: str = os.getenv("SWITCH_ROOM_ID", "cyberwar-ops")
     ENABLE_DIRECT_DISCORD_FALLBACK: bool = os.getenv("ENABLE_DIRECT_DISCORD_FALLBACK", "true").lower() in ("true", "1", "yes")
 
-    # Pinned Models
+    # Pinned Models & Execution
     RECON_MODEL: str = os.getenv("RECON_MODEL", "gemini-3.1-flash-lite")
     ATTACKER_MODEL: str = os.getenv("ATTACKER_MODEL", "gpt-6-luna")
     FIX_ENGINE_MODEL: str = os.getenv("FIX_ENGINE_MODEL", "gpt-6-luna")
     VERIFIER_MODEL: str = os.getenv("VERIFIER_MODEL", "gemini-3.1-flash-lite")
+    MAX_TOOL_ITERATIONS: int = int(os.getenv("MAX_TOOL_ITERATIONS", "10"))
 
     # Infrastructure URLs
     REDIS_URL: str = os.getenv("REDIS_URL", "redis://redis:6379/0")
