@@ -153,14 +153,29 @@ kickoff: |
 3. **Build:**
    * Connect your favorite local CLI/Agent (Claude Code, Cursor, Codex, Antigravity, or custom HTTP agent).
    * Write room prompt & agent coordination rules in template YAML.
-4. **Submission Deliverables:**
-   * Public GitHub repository with clean code & setup guide.
-   * 2-3 minute demo video showing chat interaction.
-   * Optional: Wispr Flow scorecard (for extra $500).
-   * Optional: Technical blog post (for AirPods 5).
-   * Share on X/LinkedIn with `#HowISwitch` (for Logitech keyboard).
+4. **Official Submission Deliverables & Checklist:**
+   * **A public project repository:** Clean code, fully tested, dockerized.
+   * **A short demo video of your workflow running:** 2-3 minutes walkthrough of chat interaction, diagnostics, approval gate, and tests.
+   * **A README that explains how you used Switch:** which agents you connected, how the channel is set up, and how to run it.
+   * **A blog post about the build, which is optional and also enters you in Best Blog.**
+   * **For Code with Wispr, your Wispr usage scorecard:** a screenshot from Insights in the Wispr Flow desktop app.
+   * **Your progress:** Real-time tracking of deliverables against the deadline.
 
 ---
+
+## 📋 Submission Deliverables & Your Progress Tracker
+
+| Deliverable | Requirement | Status / Location |
+| :--- | :--- | :---: |
+| **1. A public project repository** | Clean, reproducible repository with code, docker-compose, and test suites | ✅ **Ready** ([github.com/yash-pouranik/kite](https://github.com/yash-pouranik/kite)) |
+| **2. A short demo video** | Short video (2-3 min) demonstrating workflow running in Discord | ⏳ **Recording Ready** (Script ready) |
+| **3. Switch Explanatory README** | Detailed README explaining Switch usage, connected agents, channel setup, and run instructions | ✅ **Ready** ([README.md](README.md)) |
+| **4. Technical Blog Post** | Detailed build walkthrough, gotchas, architecture, and learnings (Enters Best Blog) | ✅ **Draft Ready** (BLOG.md locally) |
+| **5. Code with Wispr Scorecard** | Screenshot from Insights in the Wispr Flow desktop app (Optional side-track) | ⏳ **To Attach** (if using Wispr) |
+| **6. Final Submission Form** | Submit before November 7, 11:59 PM IST | ⏳ **Pending Final Link** |
+
+---
+
 
 ## 🔗 Useful Links
 * [Hackathon Main Page](https://www.wemakedevs.org/hackathons/switch)
