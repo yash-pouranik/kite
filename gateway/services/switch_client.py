@@ -79,9 +79,9 @@ class SwitchAgentProtocolClient:
             "integration_profile": {
                 "connection_model": "always_on",
                 "message_exchange": True,
-                "pre_invocation_mediation": False,
-                "post_invocation_mediation": False,
-                "event_reporting": False
+                "pre_invocation_mediation": [],
+                "post_invocation_mediation": [],
+                "event_reporting": []
             },
             "overwrite": True
         }
@@ -218,7 +218,13 @@ class SwitchAgentProtocolClient:
                     continue
 
                 # 2. Register agent and configure addressing
-                await self.register_agent()
+                registered = await self.register_agent()
+                if not registered:
+                    self.is_connected = False
+                    logger.warning("Agent registration with Switch failed. Retrying in 10s...")
+                    await asyncio.sleep(10)
+                    continue
+
                 await self.configure_addressing()
 
                 # 3. Connect to WebSocket

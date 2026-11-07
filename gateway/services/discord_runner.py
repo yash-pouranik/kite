@@ -45,9 +45,14 @@ async def on_message(message: discord.Message):
         logger.warning(f"Could not fetch room history: {e}")
         room_history = [f"{message.author.name}: {content}"]
 
-    # 2. Sync room history to Switch Room client state
-    if switch_client_instance:
+    # 2. Check Switch Client state & Direct Fallback
+    is_switch_live = switch_client_instance is not None and switch_client_instance.is_connected
+
+    if is_switch_live:
+        logger.info(f"[Switch Mode Active] Relaying turn via Switch Room [{switch_client_instance.room_id}]")
         switch_client_instance.room_history = list(room_history)
+    else:
+        logger.info("[Direct Fallback Active] Switch Room disconnected. Direct Discord runner handling turn safely.")
 
     # 3. Let the Agent Engine process the turn with OpenAI Function Calling
     async with message.channel.typing():
@@ -56,11 +61,15 @@ async def on_message(message: discord.Message):
             room_history=room_history
         )
 
-        # Sync agent response into Switch Room state & forward if connected
-        if switch_client_instance:
+        # Sync agent response into Switch Room state & dispatch to Switch if live
+        if is_switch_live:
             switch_client_instance.room_history.append(f"Kite-Agent: {response_text}")
-            if switch_client_instance.is_connected:
-                asyncio.create_task(switch_client_instance.send_room_message(switch_client_instance.room_id, response_text))
+            try:
+                asyncio.create_task(
+                    switch_client_instance.send_room_message(switch_client_instance.room_id, response_text)
+                )
+            except Exception as e:
+                logger.warning(f"Could not forward message to Switch Room: {e}")
 
         # Discord message limit is 2000 chars, split if necessary
         if len(response_text) > 1950:
